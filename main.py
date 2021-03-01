@@ -38,7 +38,8 @@ toplevel_buttons = {
 def get_toplevel_markup():
     return ReplyKeyboardMarkup(
         [[toplevel_buttons['make_wish'], toplevel_buttons['fulfill_wish']],
-         [toplevel_buttons['fulfilled_list'], toplevel_buttons['todo']]]
+         [toplevel_buttons['fulfilled_list'], toplevel_buttons['todo']]],
+        resize_keyboard=True
     )
 
 
@@ -48,7 +49,8 @@ def start_handler(update: Update, _: CallbackContext):
 Нажми на кнопку внизу, чтобы отправить мне свой номер телефона'''
     update.message.reply_text(start_msg,
                               reply_markup=ReplyKeyboardMarkup(
-                                  [[KeyboardButton("Отправить\N{Mobile Phone}", request_contact=True)]]
+                                  [[KeyboardButton("Отправить\N{Mobile Phone}", request_contact=True)]],
+                                  resize_keyboard=True
                               ))
 
 
