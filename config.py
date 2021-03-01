@@ -17,7 +17,7 @@ try:
     ADMIN_IDS = list(map(int, os.environ['ADMIN_IDS'].split(';')))
     DATABASE_URL = os.environ['DATABASE_URL']
     MSG_TIMEOUT = os.environ.get('MSG_TIMEOUT', 15)
-    PINGER_SLEEP_TIME = os.environ.get('PINGER_SLEEP_TIME', 10)
+    PINGER_SLEEP_TIME = int(os.environ.get('PINGER_SLEEP_TIME', 10))
 except KeyError as e:
     logging.info(str(e))
     logging.info('Disabling pinger')
