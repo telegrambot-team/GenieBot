@@ -7,6 +7,8 @@ load_dotenv()
 
 
 token = os.environ['BOT_TOKEN']
+DATABASE_URL = os.environ['DATABASE_URL']
+ADMIN_IDS = list(map(int, os.environ['ADMIN_IDS'].split(';')))
 
 PINGER_ENABLED = True
 
@@ -14,8 +16,6 @@ try:
     api_id = int(os.environ['PINGER_API_ID'])
     api_hash = os.environ['PINGER_API_HASH']
     BOT_LIST = os.environ['PINGER_BOT_LIST'].split(';')
-    ADMIN_IDS = list(map(int, os.environ['ADMIN_IDS'].split(';')))
-    DATABASE_URL = os.environ['DATABASE_URL']
     MSG_TIMEOUT = os.environ.get('MSG_TIMEOUT', 15)
     PINGER_SLEEP_TIME = int(os.environ.get('PINGER_SLEEP_TIME', 10))
 except KeyError as e:
