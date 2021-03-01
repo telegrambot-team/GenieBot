@@ -1,17 +1,27 @@
+import asyncio
 import logging
 import os
+import sys
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.bot import log
 from telegram.ext import CommandHandler, CallbackContext, Updater, \
     MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
 
-logging.basicConfig(level=logging.DEBUG,
+from bot_pinger import run_pinger
+
+logging.basicConfig(level=logging.INFO,
                     format='%(filename)s: '
                            '%(levelname)s: '
                            '%(funcName)s(): '
                            '%(lineno)d:\t'
                            '%(message)s')
+
+from config import token, PINGER_ENABLED
+
+# hack for tornado ioloop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 toplevel_buttons = {
     "make_wish": "Загадать желание\N{Shooting Star}",
@@ -20,14 +30,13 @@ toplevel_buttons = {
     "todo": "Взято к выполнению"
 }
 
-token = os.environ['BOT_TOKEN']
-
 
 def get_toplevel_markup():
     return ReplyKeyboardMarkup(
         [[toplevel_buttons['make_wish'], toplevel_buttons['fulfill_wish']],
          [toplevel_buttons['fulfilled_list'], toplevel_buttons['todo']]]
     )
+
 
 @log
 def start_callback(update: Update, _: CallbackContext):
@@ -40,10 +49,19 @@ def start_callback(update: Update, _: CallbackContext):
 
 
 def main():
+    logging.info("Application started")
     updater = Updater(token, use_context=True)
     setup_handlers(updater)
 
     updater.start_polling()
+
+    if PINGER_ENABLED:
+        asyncio.run(run_pinger())
+    else:
+        updater.idle()
+    if updater.running:
+        updater.stop()
+    logging.info("Application shut down")
 
 
 def setup_handlers(updater):
