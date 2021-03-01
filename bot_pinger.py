@@ -61,7 +61,7 @@ async def run_pinger():
 
     error_counters = {}
     container = AlchemySessionContainer(DATABASE_URL)
-    session = container.new_session('session_name_shadow')
+    session = container.new_session('session_name_shadow_new')
     loop = asyncio.get_event_loop()
     try:
         for s in signals:

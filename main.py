@@ -3,12 +3,10 @@ import logging
 import os
 import sys
 
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.bot import log
 from telegram.ext import CommandHandler, CallbackContext, Updater, \
     MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
-
-from bot_pinger import run_pinger
 
 logging.basicConfig(level=logging.INFO,
                     format='%(filename)s: '
@@ -18,6 +16,10 @@ logging.basicConfig(level=logging.INFO,
                            '%(message)s')
 
 from config import token, PINGER_ENABLED
+
+if PINGER_ENABLED:
+    from bot_pinger import run_pinger
+
 
 # hack for tornado ioloop
 if sys.platform == 'win32':
@@ -34,18 +36,19 @@ toplevel_buttons = {
 def get_toplevel_markup():
     return ReplyKeyboardMarkup(
         [[toplevel_buttons['make_wish'], toplevel_buttons['fulfill_wish']],
-         [toplevel_buttons['fulfilled_list'], toplevel_buttons['todo']]]
+         [toplevel_buttons['fulfilled_list'], toplevel_buttons['todo']],
+         [KeyboardButton("Спросить номер", request_contact=True)]]
     )
 
 
 @log
 def start_callback(update: Update, _: CallbackContext):
-    hello_msg = '''Добро пожаловать в пещеру Джина!🧞‍♀️\n
-    Тут можно оставить своё желание\n
-    или исполнить чужое!'''
-    update.message.reply_text(hello_msg,
-                              reply_markup=get_toplevel_markup())
-    logging.info("Update: %s", update)
+    start_msg = '''Привет! Давай познакомимся😉\n
+Нажми на кнопку внизу, чтобы отправить мне свой номер телефона'''
+    update.message.reply_text(start_msg,
+                              reply_markup=ReplyKeyboardMarkup(
+                                  [[KeyboardButton("\N{Mobile Phone}", request_contact=True)]]
+                              ))
 
 
 def main():
