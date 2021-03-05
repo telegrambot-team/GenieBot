@@ -9,7 +9,7 @@ load_dotenv()
 token = os.environ['BOT_TOKEN']
 DATABASE_URL = os.environ['DATABASE_URL']
 ADMIN_IDS = list(map(int, os.environ['ADMIN_IDS'].split(';')))
-
+ARTHUR_ID = int(os.environ['ARTHUR_ID'])
 PINGER_ENABLED = True
 
 try:

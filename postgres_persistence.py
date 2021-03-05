@@ -33,13 +33,16 @@ class PSQLDatabase:
 
 class PostgresPersistence(BasePersistence):
     USER_TABLE = 'user_data'
+    CHAT_TABLE = 'chat_data'
+    BOT_TABLE = 'bot_data'
     CONVERSATION_TABLE = 'conversation_data'
 
     def __init__(self, connection_string):
-        super().__init__(store_bot_data=False,
-                         store_chat_data=False)
+        super().__init__()
         self.connection_string = connection_string
         self.user_data = defaultdict(dict)
+        self.chat_data = defaultdict(dict)
+        self.bot_data = defaultdict(dict)
         self.conversation_data = {}
         self._db = PSQLDatabase(connection_string)
         self.create_db()
@@ -47,10 +50,14 @@ class PostgresPersistence(BasePersistence):
 
     def create_db(self):
         self._db.query(f'create table IF NOT EXISTS {self.USER_TABLE} (id integer PRIMARY KEY, data JSONB);')
+        self._db.query(f'create table IF NOT EXISTS {self.CHAT_TABLE} (id integer PRIMARY KEY, data JSONB);')
+        self._db.query(f'create table IF NOT EXISTS {self.BOT_TABLE} (id integer PRIMARY KEY, data JSONB);')
         self._db.query(f'create table IF NOT EXISTS {self.CONVERSATION_TABLE} (id integer PRIMARY KEY, data JSONB);')
 
     def load_data(self):
         self._load(from_table=self.USER_TABLE, dst=self.user_data)
+        self._load(from_table=self.CHAT_TABLE, dst=self.chat_data)
+        self._load(from_table=self.BOT_TABLE, dst=self.bot_data)
         self._load(from_table=self.CONVERSATION_TABLE, dst=self.conversation_data)
 
     def _load(self, from_table, dst):
@@ -96,18 +103,31 @@ class PostgresPersistence(BasePersistence):
     def flush(self):
         for user_id, data in self.user_data.items():
             self._upsert(user_id, data, self.USER_TABLE)
+        for user_id, data in self.chat_data.items():
+            self._upsert(user_id, data, self.CHAT_TABLE)
+        for user_id, data in self.bot_data.items():
+            self._upsert(user_id, data, self.BOT_TABLE)
         for user_id, data in self.conversation_data.items():
             self._upsert(user_id, data, self.CONVERSATION_TABLE)
         self._db.close()
 
     def get_chat_data(self):
-        raise NotImplementedError("shouldn't be called")
+        return deepcopy(self.chat_data)
 
     def get_bot_data(self):
-        raise NotImplementedError("shouldn't be called")
+        return deepcopy(self.bot_data)
 
     def update_chat_data(self, chat_id, data):
-        raise NotImplementedError("shouldn't be called")
+        if self.chat_data.get(chat_id) == data:
+            return
+        logging.info(f"Updating {chat_id} with {data}")
+        self.chat_data[chat_id] = data
+        self._upsert(chat_id, data, self.CHAT_TABLE)
 
     def update_bot_data(self, data):
-        raise NotImplementedError("shouldn't be called")
+        if self.bot_data == data:
+            return
+        logging.info(f"Updating bot_data with {data}")
+        # Could be improved
+        self.bot_data = data
+        self._upsert(key=0, data=data, table=self.BOT_TABLE)
