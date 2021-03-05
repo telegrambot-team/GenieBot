@@ -58,6 +58,7 @@ class PostgresPersistence(BasePersistence):
         self._load(from_table=self.USER_TABLE, dst=self.user_data)
         self._load(from_table=self.CHAT_TABLE, dst=self.chat_data)
         self._load(from_table=self.BOT_TABLE, dst=self.bot_data)
+        self.bot_data = self.bot_data[0]
         self._load(from_table=self.CONVERSATION_TABLE, dst=self.conversation_data)
 
     def _load(self, from_table, dst):

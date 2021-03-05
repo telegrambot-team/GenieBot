@@ -124,7 +124,11 @@ def list_fulfilled(update: Update, ctx: CallbackContext):
         update.message.reply_text("Вы ещё не выполнили ни одного желания")
         return
     for wish_id in ctx.user_data['wishes']['done']:
-        update.message.reply_text(ctx.bot_data['wishes'][wish_id]['text'],
+        wish_text = ctx.bot_data['wishes'][wish_id]['text']
+        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data['wishes'][wish_id]['creator_id'])
+        creator_name, creator_phone = creator_data['contact']
+        msg_text = f'{wish_text}\n{creator_name} \N{em dash} {creator_phone}'
+        update.message.reply_text(msg_text,
                                   disable_notification=True)
 
 
