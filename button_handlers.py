@@ -44,13 +44,26 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
     ctx.user_data['list_wish_msg_id'] = {}
 
     for wish_id in ctx.user_data['wishes']['created']:
-        # TODO: убирать если исполнено, рисовать песочные часы или галочку
-        # дать возможность пометить как выполненное
-        kbd = InlineKeyboardMarkup.from_button(
-            InlineKeyboardButton('Удалить',
-                                 callback_data=f'{drop_wish_inline_btn} {wish_id}')
-        )
         wish = ctx.bot_data['wishes'][str(wish_id)]
+        if wish['status'] == WAITING:
+            kbd = InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton('Удалить',
+                                     callback_data=f'{drop_wish_inline_btn} {wish_id}')
+            )
+        elif wish['status'] == IN_PROGRESS:
+            kbd = InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton('Выполняется'
+                                     '\N{Hourglass with Flowing Sand}',
+                                     callback_data='pass')
+            )
+        elif wish['status'] == DONE:
+            kbd = InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton('Выполнено'
+                                     '\N{White Heavy Check Mark}',
+                                     callback_data='pass')
+            )
+        else:
+            raise RuntimeError(f"Invalid wish status {wish['status']}")
         msg = update.message.reply_text(wish['text'], reply_markup=kbd)
         ctx.user_data['list_wish_msg_id'][wish_id] = msg.message_id
     return ConversationHandler.END
@@ -80,7 +93,7 @@ def select_wish(update: Update, ctx: CallbackContext):
         update.message.reply_text(
             'Нельзя взять больше трёх желаний одновременно')
         return
-    # Если ни одного желния не выводится -- пиать что нет желаний
+    # TODO: Если ни одного желния не выводится -- пиать что нет желаний
     ctx.user_data['select_wish_msg_id'] = []
     chat_id = update.effective_chat.id
     for wish in ctx.bot_data['wishes'].values():
