@@ -28,7 +28,8 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
         'fulfiller_id': None,
         'status': WAITING
     }
-    ctx.bot_data['wishes'][wish_id] = new_wish
+    # str is used because of storing dict as json; json can not have int keys
+    ctx.bot_data['wishes'][str(wish_id)] = new_wish
     ctx.user_data['wishes']['created'].append(wish_id)
 
     update.message.reply_text('Слушаюсь и повинуюсь')
@@ -49,7 +50,7 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
             InlineKeyboardButton('Удалить',
                                  callback_data=f'{drop_wish_inline_btn} {wish_id}')
         )
-        wish = ctx.bot_data['wishes'][wish_id]
+        wish = ctx.bot_data['wishes'][str(wish_id)]
         msg = update.message.reply_text(wish['text'], reply_markup=kbd)
         ctx.user_data['list_wish_msg_id'][wish_id] = msg.message_id
     return ConversationHandler.END
@@ -63,7 +64,7 @@ def remove_wish_handler(update: Update, ctx: CallbackContext):
     ctx.bot.delete_message(chat_id, msg_id)
 
     ctx.user_data['wishes']['created'].remove(wish_id)
-    wish = ctx.bot_data['wishes'][wish_id]
+    wish = ctx.bot_data['wishes'][str(wish_id)]
     if wish['status'] == IN_PROGRESS:
         fulfiller_data = ctx.dispatcher.user_data.get(wish['fulfiller_id'])
         fulfiller_data['wishes']['in_progress'].remove(wish_id)
@@ -102,7 +103,7 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     for msg_id in ctx.user_data['select_wish_msg_id']:
         ctx.bot.delete_message(chat_id, msg_id)
 
-    wish = ctx.bot_data['wishes'][wish_id]
+    wish = ctx.bot_data['wishes'][str(wish_id)]
     wish['status'] = IN_PROGRESS
     wish['fulfiller_id'] = chat_id
 
@@ -124,8 +125,8 @@ def list_fulfilled(update: Update, ctx: CallbackContext):
         update.message.reply_text("Вы ещё не выполнили ни одного желания")
         return
     for wish_id in ctx.user_data['wishes']['done']:
-        wish_text = ctx.bot_data['wishes'][wish_id]['text']
-        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data['wishes'][wish_id]['creator_id'])
+        wish_text = ctx.bot_data['wishes'][str(wish_id)]['text']
+        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data['wishes'][str(wish_id)]['creator_id'])
         creator_name, creator_phone = creator_data['contact']
         msg_text = f'{wish_text}\n{creator_name} \N{em dash} {creator_phone}'
         update.message.reply_text(msg_text,
@@ -140,7 +141,7 @@ def list_in_progress(update: Update, ctx: CallbackContext):
 
     ctx.user_data['fulfill_wish_msg_id'] = []
     for wish_id in ctx.user_data['wishes']['in_progress']:
-        wish = ctx.bot_data['wishes'][wish_id]
+        wish = ctx.bot_data['wishes'][str(wish_id)]
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton('Отправить фото',
                                  callback_data=f'{fulfill_wish_inline_btn} {wish_id}')
@@ -174,7 +175,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
         update.message.reply_text('Отправьте фото или видео')
         return WAITING_FOR_PROOF
     wish_id = ctx.user_data['wish_waiting_for_proof']
-    wish = ctx.bot_data['wishes'][wish_id]
+    wish = ctx.bot_data['wishes'][str(wish_id)]
     wish['status'] = DONE
     ctx.user_data['wishes']['done'].append(wish_id)
     ctx.user_data['wishes']['in_progress'].remove(wish_id)
