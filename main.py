@@ -52,15 +52,18 @@ def msg_admin(bot, message, **kwargs):
 
 
 def ups_handler(update, context):
+    chat_id = update.effective_chat.id or ""
     logging.exception(context.error)
     msg_admin(context.bot, f'Following error occured:\n'
-                           f'{update.effective_chat.id=}\n'
+                           f'{chat_id}\n'
                            f'{type(context.error)=}\n'
                            f'msg={context.error}')
 
 
 @log
-def start_handler(update: Update, _: CallbackContext):
+def start_handler(update: Update, ctx: CallbackContext):
+    if 'wishes' not in ctx.bot_data:
+        ctx.bot_data['wishes'] = {}
     update.message.reply_text(start_msg,
                               reply_markup=ReplyKeyboardMarkup(
                                   [[KeyboardButton(
