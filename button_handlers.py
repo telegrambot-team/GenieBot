@@ -86,16 +86,15 @@ def remove_wish_handler(update: Update, ctx: CallbackContext):
 
 @log
 def select_wish(update: Update, ctx: CallbackContext):
-    if not ctx.bot_data['wishes']:
-        update.message.reply_text('Пока никто не загадал ни одного желания')
-        return
     if len(ctx.user_data['wishes']['in_progress']) >= 3:
         update.message.reply_text(
             'Нельзя взять больше трёх желаний одновременно')
         return
-    # TODO: Если ни одного желния не выводится -- пиать что нет желаний
     ctx.user_data['select_wish_msg_id'] = []
     chat_id = update.effective_chat.id
+
+    counter = 0
+
     for wish in ctx.bot_data['wishes'].values():
         if wish['creator_id'] == chat_id or wish['status'] != WAITING:
             continue
@@ -106,6 +105,10 @@ def select_wish(update: Update, ctx: CallbackContext):
         msg = update.message.reply_text(wish['text'], reply_markup=kbd,
                                         disable_notification=True)
         ctx.user_data['select_wish_msg_id'].append(msg.message_id)
+        counter += 1
+
+    if counter == 0:
+        update.message.reply_text('Пока нет желаний для выполнения')
 
 
 @log
