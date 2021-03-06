@@ -22,6 +22,7 @@ toplevel_buttons = {
     MY_WISHES: "Мои желания"
 }
 
+
 request_contact_text = "Отправить\N{Mobile Phone}"
 
 default_handler_text = "Чтобы начать выбери одну из кнопок внизу\n" \
@@ -42,5 +43,10 @@ DONE = 7
 REMOVED = 8
 
 
-# TODO: check should this value be unique
 WAITING_FOR_PROOF = 9
+
+ADMIN_ALL_WISHES = 10
+
+admin_buttons = {
+    ADMIN_ALL_WISHES: 'Админ: список всех желаний'
+}

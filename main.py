@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO,
                            '%(lineno)d:\t'
                            '%(message)s')
 
-from config import token, PINGER_ENABLED, DATABASE_URL, ADMIN_IDS
+from config import token, PINGER_ENABLED, DATABASE_URL, ADMIN_IDS, ARTHUR_ID
 import asyncio
 import sys
 from functools import wraps
@@ -22,7 +22,8 @@ from button_handlers import button_handler, make_wish_handler, incorrect_wish_ha
 from postgres_persistence import PostgresPersistence
 from constants import intro_msg, start_msg, toplevel_buttons, request_contact_text, default_handler_text, \
     error_text, WAITING_FOR_PROOF, MAKE_WISH, SELECT_WISH, FULFILLED_LIST, MY_WISHES, \
-    WISHES_IN_PROGRESS, take_wish_inline_btn, drop_wish_inline_btn, fulfill_wish_inline_btn
+    WISHES_IN_PROGRESS, take_wish_inline_btn, drop_wish_inline_btn, fulfill_wish_inline_btn, admin_buttons, \
+    ADMIN_ALL_WISHES
 
 if PINGER_ENABLED:
     from bot_pinger import run_pinger
@@ -32,15 +33,17 @@ if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
-def get_toplevel_markup():
-    return ReplyKeyboardMarkup(
-        [[toplevel_buttons[MAKE_WISH],
+def get_toplevel_markup(user_id):
+    xs = [[toplevel_buttons[MAKE_WISH],
           toplevel_buttons[SELECT_WISH]],
          [toplevel_buttons[FULFILLED_LIST],
           toplevel_buttons[MY_WISHES],
-          toplevel_buttons[WISHES_IN_PROGRESS]]],
-        resize_keyboard=True
-    )
+          toplevel_buttons[WISHES_IN_PROGRESS]]]
+    if user_id == ARTHUR_ID:
+        xs.append([
+            admin_buttons[ADMIN_ALL_WISHES]
+        ])
+    return ReplyKeyboardMarkup(xs, resize_keyboard=True)
 
 
 def msg_admin(bot, message, **kwargs):
@@ -50,7 +53,6 @@ def msg_admin(bot, message, **kwargs):
 
 def ups_handler(update, context):
     logging.exception(context.error)
-    update.effective_message.reply_text(error_text)
     msg_admin(context.bot, f'Following error occured:\n'
                            f'{update.effective_chat.id=}\n'
                            f'{type(context.error)=}\n'
@@ -70,7 +72,7 @@ def start_handler(update: Update, _: CallbackContext):
 @log
 def default_handler(update: Update, _: CallbackContext):
     update.message.reply_text(default_handler_text,
-                              reply_markup=get_toplevel_markup())
+                              reply_markup=get_toplevel_markup(update.effective_user.id))
 
 
 @log
@@ -89,7 +91,7 @@ def contact_handler(update: Update, ctx: CallbackContext):
 
 def main_handler(update: Update, _: CallbackContext):
     update.message.reply_text(intro_msg,
-                              reply_markup=get_toplevel_markup())
+                              reply_markup=get_toplevel_markup(update.effective_user.id))
 
 
 def main():
@@ -120,7 +122,8 @@ def setup_handlers(updater):
     dispatcher.add_handler(
         ConversationHandler(
             entry_points=[
-                MessageHandler(Filters.text(toplevel_buttons.values()),
+                MessageHandler(Filters.text(list(toplevel_buttons.values())+
+                                            list(admin_buttons.values())),
                                button_handler)
             ],
             states={

@@ -5,7 +5,7 @@ from telegram.ext import CallbackContext, ConversationHandler
 from config import ARTHUR_ID
 from constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
     SELECT_WISH, FULFILLED_LIST, WISHES_IN_PROGRESS, MY_WISHES, WAITING, REMOVED, IN_PROGRESS, drop_wish_inline_btn, \
-    fulfill_wish_inline_btn, take_wish_inline_btn, DONE
+    fulfill_wish_inline_btn, take_wish_inline_btn, DONE, admin_buttons, ADMIN_ALL_WISHES
 
 
 def incorrect_wish_handler(update: Update, _: CallbackContext):
@@ -26,7 +26,8 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
         'creator_id': update.effective_user.id,
         'text': update.message.text,
         'fulfiller_id': None,
-        'status': WAITING
+        'status': WAITING,
+        'proof_msg_id': None
     }
     # str is used because of storing dict as json; json can not have int keys
     ctx.bot_data['wishes'][str(wish_id)] = new_wish
@@ -193,13 +194,27 @@ def proof_handler(update: Update, ctx: CallbackContext):
     wish_id = ctx.user_data['wish_waiting_for_proof']
     wish = ctx.bot_data['wishes'][str(wish_id)]
     wish['status'] = DONE
+    wish['proof_msg_id'] = update.message.message_id
     ctx.user_data['wishes']['done'].append(wish_id)
     ctx.user_data['wishes']['in_progress'].remove(wish_id)
-    # TODO: сохранить фото и как-то перекинуть Артуру
-    update.message.forward(ARTHUR_ID)
-    ctx.bot.send_message(ARTHUR_ID, wish)
     update.message.reply_text('Желание выполнено👍')
     return ConversationHandler.END
+
+
+@log
+def admin_list_all_wishes(update: Update, ctx: CallbackContext):
+    for wish in ctx.bot_data['wishes'].values():
+        if wish['status'] != DONE:
+            continue
+
+        creator_data = ctx.dispatcher.user_data.get(wish['creator_id'])
+        creator_name, creator_phone = creator_data['contact']
+
+        msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
+        update.message.reply_text(msg_text)
+        ctx.bot.forward_message(ARTHUR_ID, wish['fulfiller_id'], wish['proof_msg_id'])
+
+
 
 
 @log
@@ -219,4 +234,7 @@ def button_handler(update: Update, ctx: CallbackContext):
         return ConversationHandler.END
     elif text == toplevel_buttons[MY_WISHES]:
         list_my_wishes(update, ctx)
+        return ConversationHandler.END
+    elif text == admin_buttons[ADMIN_ALL_WISHES]:
+        admin_list_all_wishes(update, ctx)
         return ConversationHandler.END
