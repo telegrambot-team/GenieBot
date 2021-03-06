@@ -143,7 +143,7 @@ def list_in_progress(update: Update, ctx: CallbackContext):
     for wish_id in ctx.user_data['wishes']['in_progress']:
         wish = ctx.bot_data['wishes'][str(wish_id)]
         kbd = InlineKeyboardMarkup.from_button(
-            InlineKeyboardButton('Отправить фото',
+            InlineKeyboardButton('Отправить фото или видео',
                                  callback_data=f'{fulfill_wish_inline_btn} {wish_id}')
         )
         creator_data = ctx.dispatcher.user_data.get(wish['creator_id'])
