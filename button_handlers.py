@@ -180,7 +180,8 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
     for msg_id in ctx.user_data['fulfill_wish_msg_id']:
         ctx.bot.delete_message(chat_id, msg_id)
 
-    ctx.bot.send_message(chat_id, '\N{Genie}Жду подтверждение выполненного желания')
+    ctx.bot.send_message(chat_id, '\N{Genie}Жду подтверждение выполненного желания.\n'
+                                  'Отправь фото или видео\N{Winking Face}')
     ctx.user_data['wish_waiting_for_proof'] = wish_id
 
     return WAITING_FOR_PROOF
