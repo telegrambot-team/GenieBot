@@ -21,7 +21,7 @@ from button_handlers import button_handler, make_wish_handler, incorrect_wish_ha
     remove_wish_handler, take_wish_handler, proof_handler
 from postgres_persistence import PostgresPersistence
 from constants import intro_msg, start_msg, toplevel_buttons, request_contact_text, default_handler_text, \
-    error_text, WAITING_FOR_PROOF, MAKE_WISH, SELECT_WISH, FULFILLED_LIST, MY_WISHES, \
+    WAITING_FOR_PROOF, MAKE_WISH, SELECT_WISH, FULFILLED_LIST, MY_WISHES, \
     WISHES_IN_PROGRESS, take_wish_inline_btn, drop_wish_inline_btn, fulfill_wish_inline_btn, admin_buttons, \
     ADMIN_ALL_WISHES
 
@@ -82,7 +82,10 @@ def default_handler(update: Update, _: CallbackContext):
 def contact_handler(update: Update, ctx: CallbackContext):
     logging.info(update)
     contact = update.message.contact
-    ctx.user_data['contact'] = (contact.first_name, contact.phone_number)
+    phone = contact.phone_number
+    if phone[0] == '7':
+        phone = f'+{phone}'
+    ctx.user_data['contact'] = (contact.first_name, phone)
     if 'wishes' not in ctx.user_data:
         ctx.user_data['wishes'] = {
             'created': [],
