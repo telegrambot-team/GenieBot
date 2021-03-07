@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 
+from base_handlers import start_handler
 from config import ARTHUR_ID
 from constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
     SELECT_WISH, FULFILLED_LIST, WISHES_IN_PROGRESS, MY_WISHES, WAITING, REMOVED, IN_PROGRESS, drop_wish_inline_btn, \
@@ -216,10 +217,11 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
         ctx.bot.forward_message(ARTHUR_ID, wish['fulfiller_id'], wish['proof_msg_id'])
 
 
-
-
 @log
 def button_handler(update: Update, ctx: CallbackContext):
+    if 'contact' not in ctx.user_data:
+        start_handler(update, ctx)
+        return
     text = update.message.text
     if text == toplevel_buttons[MAKE_WISH]:
         update.message.reply_text("\N{Genie}Отправь мне своё желание")

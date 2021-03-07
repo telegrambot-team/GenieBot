@@ -1,0 +1,56 @@
+from telegram.ext import CommandHandler, Filters, MessageHandler, ConversationHandler, CallbackQueryHandler
+
+from base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish
+from button_handlers import button_handler, make_wish_handler, incorrect_wish_handler, remove_wish_handler, \
+    take_wish_handler, fulfill_wish_handler, proof_handler
+from constants import toplevel_buttons, admin_buttons, MAKE_WISH, drop_wish_inline_btn, take_wish_inline_btn, \
+    fulfill_wish_inline_btn, WAITING_FOR_PROOF
+
+
+def setup_handlers(updater):
+    dispatcher = updater.dispatcher
+    dispatcher.add_handler(
+        CommandHandler("start", start_handler))
+    dispatcher.add_handler(
+        CommandHandler("dropwish", drop_wish))
+    dispatcher.add_handler(
+        MessageHandler(Filters.contact, contact_handler))
+    dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[
+                MessageHandler(Filters.text(list(toplevel_buttons.values()) +
+                                            list(admin_buttons.values())),
+                               button_handler)
+            ],
+            states={
+                MAKE_WISH:
+                    [MessageHandler(Filters.text, make_wish_handler),
+                     MessageHandler(Filters.chat_type.private, incorrect_wish_handler)]
+            },
+            fallbacks=[],
+            persistent=True, name='ButtonsHandler', per_chat=False
+        )
+    )
+    dispatcher.add_handler(CallbackQueryHandler(remove_wish_handler,
+                                                pattern=f'^{drop_wish_inline_btn}.*'))
+    dispatcher.add_handler(CallbackQueryHandler(take_wish_handler,
+                                                pattern=f'^{take_wish_inline_btn}.*'))
+    dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[
+                CallbackQueryHandler(fulfill_wish_handler,
+                                     pattern=f'^{fulfill_wish_inline_btn}.*')
+            ],
+            states={
+                WAITING_FOR_PROOF:
+                    [
+                        MessageHandler(Filters.chat_type.private, proof_handler)
+                    ]
+            },
+            fallbacks=[],
+            persistent=True, name='ProofHandler', per_chat=False
+        ))
+    dispatcher.add_handler(MessageHandler(
+        Filters.chat_type.private, default_handler))
+
+    dispatcher.add_error_handler(ups_handler)
