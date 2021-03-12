@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import signal
 from asyncio import Event
 
