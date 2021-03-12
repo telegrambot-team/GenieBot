@@ -69,7 +69,7 @@ def msg_admin(bot, message, **kwargs):
 def drop_wish(update: Update, ctx: CallbackContext):
     chat_to_delete, wish_to_delete = map(int, ctx.args[0].split(":"))
     user_data = ctx.dispatcher.user_data.get(chat_to_delete)
-    if 'wishes' not in user_data or len(user_data['wishes']) < wish_to_delete:
+    if 'wishes' not in user_data or len(user_data['wishes']['created']) < wish_to_delete:
         update.message.reply_text("Неверные параметры")
         return
     wish_id = user_data['wishes']['created'][wish_to_delete]
