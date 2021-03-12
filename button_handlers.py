@@ -199,7 +199,11 @@ def proof_handler(update: Update, ctx: CallbackContext):
     wish['proof_msg_id'] = update.message.message_id
     ctx.user_data['wishes']['done'].append(wish_id)
     ctx.user_data['wishes']['in_progress'].remove(wish_id)
-    update.message.reply_text('Желание выполнено👍')
+    update.message.reply_text('Желание исполнено👍')
+
+    creator_id = wish['creator_id']
+    ctx.bot.forward_message(creator_id, wish['fulfiller_id'], wish['proof_msg_id'])
+    ctx.bot.send_message('Желание исполнено👍')
     return ConversationHandler.END
 
 
