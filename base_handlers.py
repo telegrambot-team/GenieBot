@@ -7,7 +7,8 @@ from telegram.ext import CallbackContext
 
 from config import ADMIN_IDS, ARTHUR_ID
 from constants import start_msg, request_contact_text, default_handler_text, intro_msg, ADMIN_ALL_WISHES, \
-    admin_buttons, toplevel_buttons, WISHES_IN_PROGRESS, MY_WISHES, FULFILLED_LIST, SELECT_WISH, MAKE_WISH
+    admin_buttons, toplevel_buttons, WISHES_IN_PROGRESS, MY_WISHES, FULFILLED_LIST, SELECT_WISH, MAKE_WISH, IN_PROGRESS, \
+    REMOVED
 
 
 def restricted(func):
@@ -71,6 +72,14 @@ def drop_wish(update: Update, ctx: CallbackContext):
     if 'wishes' not in user_data or len(user_data['wishes']) < wish_to_delete:
         update.message.reply_text("Неверные параметры")
         return
+    wish_id = user_data['wishes']['created'][wish_to_delete]
+    wish = ctx.bot_data['wishes'][str(wish_id)]
+    # TODO: add other statuses
+    if wish['status'] == IN_PROGRESS:
+        fulfiller_data = ctx.dispatcher.user_data.get(wish['fulfiller_id'])
+        fulfiller_data['wishes']['in_progress'].remove(wish_id)
+    wish['status'] = REMOVED
+
     del user_data['wishes']['created'][wish_to_delete]
     update.message.reply_text("Желание удалено")
 
