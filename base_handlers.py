@@ -100,7 +100,7 @@ def contact_handler(update: Update, ctx: CallbackContext):
     logging.info(update)
     contact = update.message.contact
     phone = contact.phone_number
-    if phone[0] == '7':
+    if phone[0] != '+':
         phone = f'+{phone}'
     ctx.user_data['contact'] = (contact.first_name, phone)
     if 'wishes' not in ctx.user_data:
