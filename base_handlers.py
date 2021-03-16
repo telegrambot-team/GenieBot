@@ -66,6 +66,7 @@ def msg_admin(bot, message, **kwargs):
 @log
 @restricted
 def drop_wish(update: Update, ctx: CallbackContext):
+    # TODO: fix this, doesn't work
     chat_to_delete, wish_to_delete = map(int, ctx.args[0].split(":"))
     user_data = ctx.dispatcher.user_data.get(chat_to_delete)
     if 'wishes' not in user_data or len(user_data['wishes']['created']) < wish_to_delete:
