@@ -3,7 +3,7 @@ from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 
 from base_handlers import start_handler
-from config import ARTHUR_ID
+from config import get_config
 from constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
     SELECT_WISH, FULFILLED_LIST, WISHES_IN_PROGRESS, MY_WISHES, WAITING, REMOVED, IN_PROGRESS, drop_wish_inline_btn, \
     fulfill_wish_inline_btn, take_wish_inline_btn, DONE, admin_buttons, ADMIN_ALL_WISHES
@@ -210,6 +210,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
 
 @log
 def admin_list_all_wishes(update: Update, ctx: CallbackContext):
+    conf = get_config()
     for wish in ctx.bot_data['wishes'].values():
         if wish['status'] != DONE:
             continue
@@ -219,7 +220,7 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
 
         msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
         update.message.reply_text(msg_text)
-        ctx.bot.forward_message(ARTHUR_ID, wish['fulfiller_id'], wish['proof_msg_id'])
+        ctx.bot.forward_message(conf.arthur_id, wish['fulfiller_id'], wish['proof_msg_id'])
 
 
 @log

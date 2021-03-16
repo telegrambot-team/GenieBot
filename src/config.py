@@ -1,24 +1,69 @@
 import logging
 import os
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
+from typing import List
 
 load_dotenv()
+config_instance = None
 
 
-token = os.environ['BOT_TOKEN']
-DATABASE_URL = os.environ['DATABASE_URL']
-ADMIN_IDS = list(map(int, os.environ['ADMIN_IDS'].split(';')))
-ARTHUR_ID = int(os.environ['ARTHUR_ID'])
-PINGER_ENABLED = True
+@dataclass
+class PingerConfig:
+    api_id: int
+    api_hash: str
+    bot_list: List[str]
+    msg_timeout: int
+    pinger_sleep_time: int
 
-try:
-    api_id = int(os.environ['PINGER_API_ID'])
-    api_hash = os.environ['PINGER_API_HASH']
-    BOT_LIST = os.environ['PINGER_BOT_LIST'].split(';')
-    MSG_TIMEOUT = os.environ.get('MSG_TIMEOUT', 15)
-    PINGER_SLEEP_TIME = int(os.environ.get('PINGER_SLEEP_TIME', 10))
-except KeyError as e:
-    logging.info(str(e))
-    logging.info('Disabling pinger')
-    PINGER_ENABLED = False
+
+@dataclass
+class Config:
+    bot_token: str
+    db_url: str
+    admin_ids: List[int]
+    arthur_id: int
+    pinger_enabled: bool
+    pinger_config: PingerConfig
+
+
+def get_config():
+    global config_instance
+    if config_instance:
+        return config_instance
+
+    token = os.environ['BOT_TOKEN']
+    database_url = os.environ['DATABASE_URL']
+    admin_ids = list(map(int, os.environ['ADMIN_IDS'].split(';')))
+    arthur_id = int(os.environ['ARTHUR_ID'])
+    pinger_enabled = True
+
+    try:
+        api_id = int(os.environ['PINGER_API_ID'])
+        api_hash = os.environ['PINGER_API_HASH']
+        bot_list = os.environ['PINGER_BOT_LIST'].split(';')
+        msg_timeout = int(os.environ.get('MSG_TIMEOUT', 15))
+        pinger_sleep_time = int(os.environ.get('PINGER_SLEEP_TIME', 10))
+        pinger_config = PingerConfig(
+            api_id=api_id,
+            api_hash=api_hash,
+            bot_list=bot_list,
+            msg_timeout=msg_timeout,
+            pinger_sleep_time=pinger_sleep_time
+        )
+    except KeyError as e:
+        logging.info(repr(e))
+        logging.info('Disabling pinger')
+        pinger_enabled = False
+        pinger_config = None
+
+    config_instance = Config(
+        bot_token=token,
+        db_url=database_url,
+        admin_ids=admin_ids,
+        arthur_id=arthur_id,
+        pinger_enabled=pinger_enabled,
+        pinger_config=pinger_config
+    )
+    return config_instance

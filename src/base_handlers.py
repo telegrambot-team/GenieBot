@@ -5,7 +5,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
-from config import ADMIN_IDS, ARTHUR_ID
+from config import get_config
 from constants import start_msg, request_contact_text, default_handler_text, intro_msg, ADMIN_ALL_WISHES, \
     admin_buttons, toplevel_buttons, WISHES_IN_PROGRESS, MY_WISHES, FULFILLED_LIST, SELECT_WISH, MAKE_WISH, REMOVED
 
@@ -14,7 +14,8 @@ def restricted(func):
     @wraps(func)
     def wrapped(update, context: CallbackContext, *args, **kwargs) -> None:
         user_id = update.effective_user.id
-        if user_id not in ADMIN_IDS:
+        conf = get_config()
+        if user_id not in conf.admin_ids:
             text = f"Unauthorized access denied for {user_id}"
             logging.warning(text)
             msg_admin(context.bot, text)
@@ -51,7 +52,8 @@ def get_toplevel_markup(user_id):
           [toplevel_buttons[FULFILLED_LIST],
            toplevel_buttons[MY_WISHES],
            toplevel_buttons[WISHES_IN_PROGRESS]]]
-    if user_id == ARTHUR_ID:
+    conf = get_config()
+    if user_id == conf.arthur_id:
         xs.append([
             admin_buttons[ADMIN_ALL_WISHES]
         ])
@@ -59,7 +61,8 @@ def get_toplevel_markup(user_id):
 
 
 def msg_admin(bot, message, **kwargs):
-    for admin_id in ADMIN_IDS:
+    conf = get_config()
+    for admin_id in conf.admin_ids:
         bot.send_message(chat_id=admin_id, text=message, **kwargs)
 
 

@@ -7,7 +7,7 @@ from alchemysession import AlchemySessionContainer
 from telethon import TelegramClient, events
 from telethon.tl.types import PeerUser
 
-from config import MSG_TIMEOUT, PINGER_ENABLED, DATABASE_URL, api_id, api_hash, ADMIN_IDS, BOT_LIST, PINGER_SLEEP_TIME
+from config import get_config
 
 signals = (signal.SIGTERM, signal.SIGINT)
 
@@ -32,7 +32,7 @@ async def event_wait(evt, timeout):
     return evt.is_set()
 
 
-async def process_bots(bot_list, admin_entities, client, error_counters):
+async def process_bots(bot_list, admin_entities, client, error_counters, msg_timeout):
     for bot in bot_list:
         logging.info("Sending message to %s", bot)
         got_reply = Event()
@@ -46,7 +46,7 @@ async def process_bots(bot_list, admin_entities, client, error_counters):
         msg = await client.send_message(bot, '/start')
         logging.info(msg)
 
-        if not await event_wait(got_reply, MSG_TIMEOUT):
+        if not await event_wait(got_reply, msg_timeout):
             error_counters[bot] += 1
             if error_counters[bot] < 2:
                 continue
@@ -56,10 +56,11 @@ async def process_bots(bot_list, admin_entities, client, error_counters):
 
 
 async def run_pinger():
-    assert PINGER_ENABLED
+    conf = get_config()
+    assert conf.pinger_enabled
 
     error_counters = {}
-    container = AlchemySessionContainer(DATABASE_URL)
+    container = AlchemySessionContainer(conf.db_url)
     session = container.new_session('session_name_shadow_new')
     loop = asyncio.get_event_loop()
     try:
@@ -68,15 +69,20 @@ async def run_pinger():
     except NotImplementedError:
         pass
     try:
-        async with TelegramClient(session, api_id, api_hash) as client:
+        async with TelegramClient(session,
+                                  conf.pinger_config.api_id,
+                                  conf.pinger_config.api_hash) as client:
             admin_entities = []
-            for admin_id in ADMIN_IDS:
+            for admin_id in conf.admin_ids:
                 admin_entities.append(await client.get_entity(PeerUser(admin_id)))
-            for bot in BOT_LIST:
+            for bot in conf.pinger_config.bot_list:
                 error_counters[bot] = 0
             while True:
-                await process_bots(BOT_LIST, admin_entities, client, error_counters)
+                await process_bots(conf.pinger_config.bot_list,
+                                   admin_entities,
+                                   client, error_counters,
+                                   conf.pinger_config.msg_timeout)
                 logging.info("Sleeping")
-                await asyncio.sleep(PINGER_SLEEP_TIME)
+                await asyncio.sleep(conf.pinger_config.pinger_sleep_time)
     except asyncio.CancelledError:
         logging.info("Pinger was cancelled")
