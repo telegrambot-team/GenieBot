@@ -5,8 +5,8 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
-from config import get_config
-from constants import start_msg, request_contact_text, default_handler_text, intro_msg, ADMIN_ALL_WISHES, \
+from src.config import get_config
+from src.constants import start_msg, request_contact_text, default_handler_text, intro_msg, ADMIN_ALL_WISHES, \
     admin_buttons, toplevel_buttons, WISHES_IN_PROGRESS, MY_WISHES, FULFILLED_LIST, SELECT_WISH, MAKE_WISH, REMOVED
 
 

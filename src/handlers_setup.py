@@ -1,9 +1,9 @@
 from telegram.ext import CommandHandler, Filters, MessageHandler, ConversationHandler, CallbackQueryHandler
 
-from base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish
-from button_handlers import button_handler, make_wish_handler, incorrect_wish_handler, remove_wish_handler, \
+from src.base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish
+from src.button_handlers import button_handler, make_wish_handler, incorrect_wish_handler, remove_wish_handler, \
     take_wish_handler, fulfill_wish_handler, proof_handler
-from constants import toplevel_buttons, admin_buttons, MAKE_WISH, drop_wish_inline_btn, take_wish_inline_btn, \
+from src.constants import toplevel_buttons, admin_buttons, MAKE_WISH, drop_wish_inline_btn, take_wish_inline_btn, \
     fulfill_wish_inline_btn, WAITING_FOR_PROOF
 
 

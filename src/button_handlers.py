@@ -2,9 +2,9 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 
-from base_handlers import start_handler
-from config import get_config
-from constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
+from src.base_handlers import start_handler
+from src.config import get_config
+from src.constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
     SELECT_WISH, FULFILLED_LIST, WISHES_IN_PROGRESS, MY_WISHES, WAITING, REMOVED, IN_PROGRESS, drop_wish_inline_btn, \
     fulfill_wish_inline_btn, take_wish_inline_btn, DONE, admin_buttons, ADMIN_ALL_WISHES
 
