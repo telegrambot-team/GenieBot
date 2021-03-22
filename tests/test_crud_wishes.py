@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
-from src.constants import start_msg
+from src.constants import start_msg, request_contact_text
 from src.main import create_bot
 
 
@@ -83,6 +83,8 @@ class TestCrudWishes(unittest.TestCase):
                 # noinspection PyTypeChecker
                 lst = list(itertools.islice(client.iter_messages(self.chat_peer),
                                             unread_count))
+                # noinspection PyTypeChecker
+                client.send_read_acknowledge(self.chat_peer)
                 return lst[0] if len(lst) == 1 else lst
             if now + timeout < time.time():
                 break
@@ -93,8 +95,13 @@ class TestCrudWishes(unittest.TestCase):
         self.send_message('/start')
         msg = self.getUnreadMessages()
         self.assertEqual(msg.text, start_msg)
+        self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
+                         request_contact_text)
 
-    def test_requesting_contact(self):
         self.send_message('23525')
         msg = self.getUnreadMessages()
         self.assertEqual(msg.text, start_msg)
+        self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
+                         request_contact_text)
+        reply_msg = msg.click(share_phone=True)
+        pass

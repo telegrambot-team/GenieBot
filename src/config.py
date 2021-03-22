@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 from typing import List
 
-load_dotenv()
 config_instance = None
 
 
@@ -33,6 +32,7 @@ def get_config():
     if config_instance:
         return config_instance
 
+    load_dotenv()
     token = os.environ['BOT_TOKEN']
     database_url = os.environ['DATABASE_URL']
     admin_ids = list(map(int, os.environ['ADMIN_IDS'].split(';')))
