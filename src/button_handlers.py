@@ -16,6 +16,10 @@ def incorrect_wish_handler(update: Update, _: CallbackContext):
 
 
 def make_wish_handler(update: Update, ctx: CallbackContext):
+    if update.message.text in toplevel_buttons.values():
+        update.message.reply_text("Будем считать это случайностью\N{Winking Face}")
+        return MAKE_WISH
+
     wish_id = len(ctx.bot_data['wishes'])
     new_wish = {
         'wish_id': wish_id,
@@ -239,6 +243,7 @@ def button_handler(update: Update, ctx: CallbackContext):
     elif text == toplevel_buttons[MY_WISHES]:
         list_my_wishes(update, ctx)
         return ConversationHandler.END
+    # TODO: and if sender is admin
     elif text == admin_buttons[ADMIN_ALL_WISHES]:
         admin_list_all_wishes(update, ctx)
         return ConversationHandler.END

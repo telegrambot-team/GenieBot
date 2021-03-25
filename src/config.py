@@ -35,7 +35,7 @@ def get_config():
 
     load_dotenv()
     token = os.environ['BOT_TOKEN']
-    database_url = os.environ['DATABASE_URL']
+    database_url = os.environ.get('DATABASE_URL') or ''
     admin_ids = list(map(int, os.environ['ADMIN_IDS'].split(';')))
     arthur_id = int(os.environ['ARTHUR_ID'])
     pinger_enabled = True
