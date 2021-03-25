@@ -1,0 +1,73 @@
+import logging
+import os
+import time
+import unittest
+
+from dotenv import load_dotenv
+
+from src.constants import wish_taken, magick_begins
+from tests.utils import ClientHelper, TestConf, ConversationHelper
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO,
+                        format='%(filename)s: '
+                               '%(levelname)s: '
+                               '%(funcName)s(): '
+                               '%(lineno)d:\t'
+                               '%(message)s')
+
+    load_dotenv('tests/test_data/.testenv')
+
+
+class TestFulfill(unittest.TestCase):
+    tg_client_wrapper_0 = None
+    tg_client_wrapper_1 = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tg_client_wrapper_0 = ClientHelper('tests/test_data/sess')
+        cls.tg_client_wrapper_1 = ClientHelper('tests/test_data/sess2')
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.tg_client_wrapper_0.close()
+
+    def setUp(self) -> None:
+        test_conf = TestConf(
+            db_url="",
+            bot_token=os.environ['BOT_TOKEN'],
+            tg_client_0=self.tg_client_wrapper_0.client,
+            tg_client_1=self.tg_client_wrapper_1.client
+        )
+        self.conversation_helper = ConversationHelper(test_conf)
+
+    def tearDown(self) -> None:
+        self.conversation_helper.stop_bot()
+
+    def test_fulfill(self):
+        control_msg_0 = self.conversation_helper.login_bot()
+        control_msg_0.click(0)
+        wish_txt = 'Some wish text'
+        self.conversation_helper.send_message(wish_txt)
+        time.sleep(1)
+        self.conversation_helper.mark_read()
+
+        self.conversation_helper.switch_client()
+        control_msg_1 = self.conversation_helper.login_bot()
+        control_msg_1.click(1)
+        wish_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(wish_msg.text, wish_txt)
+        wish_msg.click(0)
+        wish_reply_msg = self.conversation_helper.get_unread_messages()
+        phone = self.tg_client_wrapper_0.me.phone
+        if not phone.startswith('+'):
+            phone = '+' + phone
+        wish_reply_txt = wish_taken.format(wish_text=wish_txt,
+                                           creator_name=self.tg_client_wrapper_0.me.first_name,
+                                           creator_phone=phone)
+        self.assertEqual(wish_reply_msg.text, wish_reply_txt)
+
+        self.conversation_helper.switch_client()
+        msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(msg.text, magick_begins)

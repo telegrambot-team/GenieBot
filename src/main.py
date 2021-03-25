@@ -14,7 +14,12 @@ if sys.platform == 'win32':
 
 
 def create_bot(conf):
-    persistence = PostgresPersistence(conf.db_url)
+    if conf.db_url:
+        persistence = PostgresPersistence(conf.db_url)
+        logging.info("Persistence enabled")
+    else:
+        persistence = None
+        logging.warning("Persistence disabled")
     updater = Updater(conf.bot_token, use_context=True, persistence=persistence)
     setup_handlers(updater)
     return updater

@@ -1,107 +1,116 @@
-import contextlib
-import itertools
+import logging
 import os
 import time
 import unittest
-from dataclasses import dataclass
 
 from dotenv import load_dotenv
-from telethon.sync import TelegramClient
-from telethon.tl import functions
 
-from src.constants import start_msg, request_contact_text
-from src.main import create_bot
-
-
-@dataclass
-class TestConf:
-    db_url: str
-    bot_token: str
-
-
-# noinspection PyTypeChecker
-stack: contextlib.ExitStack = None
-# noinspection PyTypeChecker
-client: TelegramClient = None
-resource = None
-test_conf = None
+from src.constants import start_msg, request_contact_text, intro_msg, waiting_for_wish, lock_and_load, \
+    no_self_created_wishes
+from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
 
 def setUpModule():
+    logging.basicConfig(level=logging.INFO,
+                        format='%(filename)s: '
+                               '%(levelname)s: '
+                               '%(funcName)s(): '
+                               '%(lineno)d:\t'
+                               '%(message)s')
+
     load_dotenv('tests/test_data/.testenv')
-    global test_conf
-    test_conf = TestConf(
-        db_url=os.environ['DATABASE_URL'],
-        bot_token=os.environ['BOT_TOKEN']
-    )
-    global stack
-    stack = contextlib.ExitStack()
-    api_id = int(os.environ['API_ID'])
-    api_hash = os.environ['API_HASH']
-    global client
-    client = TelegramClient('tests/test_data/sess', api_id, api_hash)
-    global resource
-    resource = stack.enter_context(client)
 
 
-def tearDownModule():
-    stack.close()
+def check_start_msg(self, msg):
+    self.assertEqual(msg.text, start_msg)
+    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
+                     request_contact_text)
+
+
+def check_intro_msg(self, msg):
+    self.assertEqual(msg.text, intro_msg)
 
 
 class TestCrudWishes(unittest.TestCase):
+    tg_client_wrapper = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tg_client_wrapper = ClientHelper('tests/test_data/sess')
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.tg_client_wrapper.close()
+
     def setUp(self) -> None:
-        # drop database
-        self.bot_updater = create_bot(test_conf)
-        self.bot_updater.start_polling()
-        self.chat_peer = client.get_input_entity(self.bot_updater.bot.name)
-        # noinspection PyTypeChecker
-        client.send_read_acknowledge(self.chat_peer)
+        test_conf = TestConf(
+            db_url="",
+            bot_token=os.environ['BOT_TOKEN'],
+            tg_client_0=self.tg_client_wrapper.client
+        )
+        self.conversation_helper = ConversationHelper(test_conf)
 
     def tearDown(self) -> None:
-        self.bot_updater.stop()
-
-    def getUnreadCount(self):
-        # noinspection PyTypeChecker
-        result = client(functions.messages.GetPeerDialogsRequest(
-            peers=[self.chat_peer]
-        ))
-        return result.dialogs[0].unread_count
-
-    def send_message(self, txt):
-        msg = client.send_message(
-            self.bot_updater.bot.name,
-            txt
-        )
-        return msg
-
-    def getUnreadMessages(self, timeout=10):
-        now = time.time()
-        while True:
-            # noinspection PyTypeChecker
-            unread_count = self.getUnreadCount()
-            if unread_count:
-                # noinspection PyTypeChecker
-                lst = list(itertools.islice(client.iter_messages(self.chat_peer),
-                                            unread_count))
-                # noinspection PyTypeChecker
-                client.send_read_acknowledge(self.chat_peer)
-                return lst[0] if len(lst) == 1 else lst
-            if now + timeout < time.time():
-                break
-            time.sleep(0.1)
-        raise TimeoutError("No messages delivered in time")
+        self.conversation_helper.stop_bot()
 
     def test_start(self):
-        self.send_message('/start')
-        msg = self.getUnreadMessages()
-        self.assertEqual(msg.text, start_msg)
-        self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
-                         request_contact_text)
+        self.conversation_helper.send_message('/start')
+        msg = self.conversation_helper.get_unread_messages()
+        check_start_msg(self, msg)
 
-        self.send_message('23525')
-        msg = self.getUnreadMessages()
-        self.assertEqual(msg.text, start_msg)
-        self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
-                         request_contact_text)
-        reply_msg = msg.click(share_phone=True)
-        pass
+        self.conversation_helper.send_message('23525')
+        msg = self.conversation_helper.get_unread_messages()
+        check_start_msg(self, msg)
+
+        msg = self.conversation_helper.login_bot()
+        check_intro_msg(self, msg)
+        check_intro_markup(self, msg)
+
+    def test_crud(self):
+        control_msg = self.conversation_helper.login_bot()
+        control_msg.click(1, 1)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, no_self_created_wishes)
+
+        # добавляем первое
+        control_msg.click(0)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, waiting_for_wish)
+        wish_txt_0 = "wgregueng 230t23j\nefowefn110"
+        wish_txt_1 = "vvvwewegergre 230t23j\needewdew"
+        self.conversation_helper.send_message(wish_txt_0)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, lock_and_load)
+
+        # проверяем, что добавилось
+        control_msg.click(1, 1)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, wish_txt_0)
+        # TODO: add check for inline button
+
+        # добавляем второе
+        control_msg.click(0)
+        self.conversation_helper.mark_read()
+        self.conversation_helper.send_message(wish_txt_1)
+        time.sleep(1)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, lock_and_load)
+
+        # проверяем, что добавилось
+        control_msg.click(1, 1)
+        time.sleep(1)
+        new_messages = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_messages[1].text, wish_txt_0)
+        self.assertEqual(new_messages[0].text, wish_txt_1)
+        new_messages[0].click(0)
+
+        # удаляем второе
+        control_msg.click(1, 1)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, wish_txt_0)
+
+        # удаляем первое
+        new_msg.click(0)
+        control_msg.click(1, 1)
+        new_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(new_msg.text, no_self_created_wishes)

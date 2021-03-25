@@ -9,6 +9,7 @@ from src.constants import toplevel_buttons, admin_buttons, MAKE_WISH, drop_wish_
 
 def setup_handlers(updater):
     dispatcher = updater.dispatcher
+    persist = updater.persistence is not None
     dispatcher.add_handler(
         CommandHandler("start", start_handler))
     dispatcher.add_handler(
@@ -28,7 +29,7 @@ def setup_handlers(updater):
                      MessageHandler(Filters.chat_type.private, incorrect_wish_handler)]
             },
             fallbacks=[],
-            persistent=True, name='ButtonsHandler', per_chat=False
+            persistent=persist, name='ButtonsHandler', per_chat=False
         )
     )
     dispatcher.add_handler(CallbackQueryHandler(remove_wish_handler,
@@ -48,7 +49,7 @@ def setup_handlers(updater):
                     ]
             },
             fallbacks=[],
-            persistent=True, name='ProofHandler', per_chat=False
+            persistent=persist, name='ProofHandler', per_chat=False
         ))
     dispatcher.add_handler(MessageHandler(
         Filters.chat_type.private, default_handler))

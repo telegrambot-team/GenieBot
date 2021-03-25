@@ -1,72 +1,86 @@
-import json
 import logging
-from builtins import property
+import traceback
 from collections import defaultdict
+from contextlib import contextmanager
 from copy import deepcopy
 
-import psycopg2
-from psycopg2.extras import Json, DictCursor
+from sqlalchemy import create_engine, Integer, Column, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from telegram.ext import BasePersistence
 
+Base = declarative_base()
 
-class PSQLDatabase:
-    def __init__(self, connection_string):
-        self._conn = psycopg2.connect(connection_string)
-        self._conn.autocommit = True
-        self._cursor = self._conn.cursor(cursor_factory=DictCursor)
 
-    def query(self, query, *params):
-        result = self._cursor.execute(query, *params)
-        logging.info(self._cursor.statusmessage)
-        return result
+# noinspection PyPep8Naming
+@contextmanager
+def session_scope(SessionCls):
+    """Provide a transactional scope around a series of operations."""
+    session = SessionCls()
+    try:
+        yield session
+        session.commit()
+    except:
+        traceback.print_exc()
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
-    def close(self):
-        return self._conn.close()
 
-    def fetchall(self):
-        return self._cursor.fetchall()
+class Document:
+    id = Column(Integer, primary_key=True)
+    data = Column(JSON)
 
-    @property
-    def closed(self):
-        return self._conn.closed
+
+class UserData(Base, Document):
+    __tablename__ = 'user'
+
+
+class ChatData(Base, Document):
+    __tablename__ = 'chat'
+
+
+class BotData(Base, Document):
+    __tablename__ = 'bot'
+
+
+class ConversationData(Base, Document):
+    __tablename__ = 'conversation'
 
 
 class PostgresPersistence(BasePersistence):
-    USER_TABLE = 'user_data'
-    CHAT_TABLE = 'chat_data'
-    BOT_TABLE = 'bot_data'
-    CONVERSATION_TABLE = 'conversation_data'
-
-    def __init__(self, connection_string):
+    def __init__(self, connection_string: str):
         super().__init__()
         self.connection_string = connection_string
         self.user_data = defaultdict(dict)
         self.chat_data = defaultdict(dict)
         self.bot_data = defaultdict(dict)
         self.conversation_data = {}
-        self._db = PSQLDatabase(connection_string)
-        self.create_db()
+        connect_args = {}
+        if self.connection_string.startswith('sqlite'):
+            connect_args = {"check_same_thread": False}
+        self.engine = create_engine(self.connection_string,
+                                    connect_args=connect_args
+                                    )
+        self.Session = sessionmaker(bind=self.engine)
+        Base.metadata.create_all(self.engine)
         self.load_data()
 
-    def create_db(self):
-        self._db.query(f'create table IF NOT EXISTS {self.USER_TABLE} (id integer PRIMARY KEY, data JSONB);')
-        self._db.query(f'create table IF NOT EXISTS {self.CHAT_TABLE} (id integer PRIMARY KEY, data JSONB);')
-        self._db.query(f'create table IF NOT EXISTS {self.BOT_TABLE} (id integer PRIMARY KEY, data JSONB);')
-        self._db.query(f'create table IF NOT EXISTS {self.CONVERSATION_TABLE} (id integer PRIMARY KEY, data JSONB);')
-
     def load_data(self):
-        self._load(from_table=self.USER_TABLE, dst=self.user_data)
-        self._load(from_table=self.CHAT_TABLE, dst=self.chat_data)
-        self._load(from_table=self.BOT_TABLE, dst=self.bot_data)
-        self.bot_data = self.bot_data[0]
-        self._load(from_table=self.CONVERSATION_TABLE, dst=self.conversation_data)
+        with session_scope(self.Session) as session:
+            self._load(session, from_table=UserData, dst=self.user_data)
+            self._load(session, from_table=ChatData, dst=self.chat_data)
+            self._load(session, from_table=BotData, dst=self.bot_data)
+            self.bot_data = self.bot_data[0] if 0 in self.bot_data else self.bot_data
+            self._load(session, from_table=ConversationData, dst=self.conversation_data)
 
-    def _load(self, from_table, dst):
-        logging.info(f"Loading state {from_table=}")
-        self._db.query(f'select id, data from {from_table}')
-        result = self._db.fetchall()
+    @staticmethod
+    def _load(session, from_table, dst):
+        logging.info(f"Loading state {from_table.__tablename__}")
+        result = session.query(from_table).all()
         for row in result:
-            dst[row['id']] = row['data']
+            dst[row.id] = row.data
 
     def get_conversations(self, name):
         conversations_by_name = {}
@@ -81,36 +95,32 @@ class PostgresPersistence(BasePersistence):
         logging.info(f"Updating conversation {name}"
                      f" with {key=}={new_state}")
         self.conversation_data[chat_id][name] = new_state
-        self._upsert(chat_id, self.conversation_data[chat_id], self.CONVERSATION_TABLE)
-
-    def _upsert(self, key, data, table):
-        ins_data = Json(data, json.dumps)
-        self._db.query(
-            f'insert into {table} (id, data) values ({key}, {ins_data})'
-            'ON CONFLICT (id)'
-            'DO UPDATE SET (id, data) = (EXCLUDED.id, EXCLUDED.data)'
-        )
+        with session_scope(self.Session) as session:
+            session.merge(ConversationData(id=chat_id, # noqa
+                                           data=self.conversation_data[chat_id])) # noqa
 
     def get_user_data(self):
         return deepcopy(self.user_data)
 
     def update_user_data(self, user_id, data):
-        if self.user_data.get(user_id) == data:
+        if self.user_data[user_id] == data:
             return
         logging.info(f"Updating {user_id} with {data}")
         self.user_data[user_id] = data
-        self._upsert(user_id, data, self.USER_TABLE)
+        with session_scope(self.Session) as session:
+            session.merge(UserData(id=user_id, # noqa
+                                   data=data)) # noqa
 
     def flush(self):
-        for user_id, data in self.user_data.items():
-            self._upsert(user_id, data, self.USER_TABLE)
-        for user_id, data in self.chat_data.items():
-            self._upsert(user_id, data, self.CHAT_TABLE)
-        for user_id, data in self.bot_data.items():
-            self._upsert(user_id, data, self.BOT_TABLE)
-        for user_id, data in self.conversation_data.items():
-            self._upsert(user_id, data, self.CONVERSATION_TABLE)
-        self._db.close()
+        with session_scope(self.Session) as session:
+            for user_id, data in self.user_data.items():
+                session.merge(UserData(id=user_id, data=data)) # noqa
+            for chat_id, data in self.chat_data.items():
+                session.merge(ChatData(id=chat_id, data=data)) # noqa
+            session.merge(BotData(id=0, data=self.bot_data)) # noqa
+            for chat_id, data in self.conversation_data.items():
+                session.merge(ConversationData(id=chat_id, data=data)) # noqa
+        self.engine.dispose()
 
     def get_chat_data(self):
         return deepcopy(self.chat_data)
@@ -119,16 +129,17 @@ class PostgresPersistence(BasePersistence):
         return deepcopy(self.bot_data)
 
     def update_chat_data(self, chat_id, data):
-        if self.chat_data.get(chat_id) == data:
+        if self.chat_data[chat_id] == data:
             return
         logging.info(f"Updating {chat_id} with {data}")
         self.chat_data[chat_id] = data
-        self._upsert(chat_id, data, self.CHAT_TABLE)
+        with session_scope(self.Session) as session:
+            session.merge(ChatData(id=chat_id, data=data)) # noqa
 
     def update_bot_data(self, data):
         if self.bot_data == data:
             return
         logging.info(f"Updating bot_data with {data}")
-        # Could be improved
         self.bot_data = data
-        self._upsert(key=0, data=data, table=self.BOT_TABLE)
+        with session_scope(self.Session) as session:
+            session.merge(BotData(id=0, data=self.bot_data)) # noqa

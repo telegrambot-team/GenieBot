@@ -28,6 +28,7 @@ class Config:
 
 
 def get_config():
+    # TODO: Should be passed to bot only once to prevent getting variables from separate configs
     global config_instance
     if config_instance:
         return config_instance

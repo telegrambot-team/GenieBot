@@ -6,7 +6,8 @@ from src.base_handlers import start_handler
 from src.config import get_config
 from src.constants import toplevel_buttons, WAITING_FOR_PROOF, MAKE_WISH, \
     SELECT_WISH, FULFILLED_LIST, WISHES_IN_PROGRESS, MY_WISHES, WAITING, REMOVED, IN_PROGRESS, drop_wish_inline_btn, \
-    fulfill_wish_inline_btn, take_wish_inline_btn, DONE, admin_buttons, ADMIN_ALL_WISHES
+    fulfill_wish_inline_btn, take_wish_inline_btn, DONE, admin_buttons, ADMIN_ALL_WISHES, waiting_for_wish, \
+    no_self_wishes, lock_and_load, no_self_created_wishes, wish_taken, magick_begins
 
 
 def incorrect_wish_handler(update: Update, _: CallbackContext):
@@ -15,13 +16,7 @@ def incorrect_wish_handler(update: Update, _: CallbackContext):
 
 
 def make_wish_handler(update: Update, ctx: CallbackContext):
-    if 'wishes' not in ctx.bot_data:
-        ctx.bot_data['wishes'] = {}
-
     wish_id = len(ctx.bot_data['wishes'])
-    # new_wish = Wish(wish_id=wish_id,
-    #                 creator_id=update.effective_user.id,
-    #                 text=update.message.text)
     new_wish = {
         'wish_id': wish_id,
         'creator_id': update.effective_user.id,
@@ -34,13 +29,13 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
     ctx.bot_data['wishes'][str(wish_id)] = new_wish
     ctx.user_data['wishes']['created'].append(wish_id)
 
-    update.message.reply_text('Слушаюсь и повинуюсь')
+    update.message.reply_text(lock_and_load)
     return ConversationHandler.END
 
 
 def list_my_wishes(update: Update, ctx: CallbackContext):
     if not ctx.user_data['wishes']['created']:
-        update.message.reply_text('Вы ещё не загадали ни одного желания')
+        update.message.reply_text(no_self_created_wishes)
         return
 
     ctx.user_data['list_wish_msg_id'] = {}
@@ -130,17 +125,17 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     creator_data = ctx.dispatcher.user_data.get(wish['creator_id'])
     creator_name, creator_phone = creator_data['contact']
 
-    text = f"\N{Genie}Поздравляю, теперь вы джинн😉\nЖелание:\n{wish['text']}\n\n" \
-           f"Ваш Алладин:\n{creator_name} \N{em dash} {creator_phone}"
+    text = wish_taken.format(wish_text=wish['text'], creator_name=creator_name,
+                             creator_phone=creator_phone)
     ctx.bot.send_message(chat_id, text)
     ctx.bot.send_message(
-        wish['creator_id'], "Одно из ваших желаний начали исполнять...😉")
+        wish['creator_id'], magick_begins)
 
 
 @log
 def list_fulfilled(update: Update, ctx: CallbackContext):
     if not ctx.user_data['wishes']['done']:
-        update.message.reply_text("Вы ещё не выполнили ни одного желания")
+        update.message.reply_text(no_self_wishes)
         return
     for wish_id in ctx.user_data['wishes']['done']:
         wish_text = ctx.bot_data['wishes'][str(wish_id)]['text']
@@ -204,7 +199,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
 
     creator_id = wish['creator_id']
     ctx.bot.forward_message(creator_id, wish['fulfiller_id'], wish['proof_msg_id'])
-    ctx.bot.send_message('Желание исполнено👍')
+    ctx.bot.send_message(creator_id, 'Желание исполнено👍')
     return ConversationHandler.END
 
 
@@ -230,7 +225,7 @@ def button_handler(update: Update, ctx: CallbackContext):
         return
     text = update.message.text
     if text == toplevel_buttons[MAKE_WISH]:
-        update.message.reply_text("\N{Genie}Отправь мне своё желание")
+        update.message.reply_text(waiting_for_wish)
         return MAKE_WISH
     elif text == toplevel_buttons[SELECT_WISH]:
         select_wish(update, ctx)
