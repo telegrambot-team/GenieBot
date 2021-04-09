@@ -6,7 +6,7 @@ from src.handlers_setup import setup_handlers
 from telegram.ext import Updater
 
 from src.config import get_config
-from src.postgres_persistence import PostgresPersistence
+from src.db_persistence import DBPersistence
 
 # hack for tornado ioloop
 if sys.platform == 'win32':
@@ -15,7 +15,7 @@ if sys.platform == 'win32':
 
 def create_bot(conf):
     if conf.db_url:
-        persistence = PostgresPersistence(conf.db_url)
+        persistence = DBPersistence(conf.db_url)
         logging.info("Persistence enabled")
     else:
         persistence = None

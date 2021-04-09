@@ -235,12 +235,15 @@ def button_handler(update: Update, ctx: CallbackContext):
         select_wish(update, ctx)
         return ConversationHandler.END
     elif text == toplevel_buttons[FULFILLED_LIST]:
+        # TODO: add pagination
         list_fulfilled(update, ctx)
         return ConversationHandler.END
     elif text == toplevel_buttons[WISHES_IN_PROGRESS]:
+        # TODO: add pagination
         list_in_progress(update, ctx)
         return ConversationHandler.END
     elif text == toplevel_buttons[MY_WISHES]:
+        # TODO: add pagination
         list_my_wishes(update, ctx)
         return ConversationHandler.END
     # TODO: and if sender is admin

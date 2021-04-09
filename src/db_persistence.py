@@ -49,7 +49,7 @@ class ConversationData(Base, Document):
     __tablename__ = 'conversation'
 
 
-class PostgresPersistence(BasePersistence):
+class DBPersistence(BasePersistence):
     def __init__(self, connection_string: str):
         super().__init__()
         self.connection_string = connection_string

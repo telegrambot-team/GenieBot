@@ -7,7 +7,7 @@ import unittest
 from dotenv import load_dotenv
 
 from src.constants import default_handler_text
-from src.postgres_persistence import PostgresPersistence
+from src.db_persistence import DBPersistence
 from tests.utils import TestConf, ClientHelper, scoped_bot, check_intro_markup
 
 
@@ -53,7 +53,7 @@ class TestPersistence(unittest.TestCase):
             self.assertEqual(msg.text, default_handler_text)
             check_intro_markup(self, msg)
 
-        loader = PostgresPersistence(self.test_conf.db_url)
+        loader = DBPersistence(self.test_conf.db_url)
         self.assertEqual(len(loader.user_data), 1)
         self.assertIn(self.tg_client_wrapper.me.id, loader.user_data)
         phone = self.tg_client_wrapper.me.phone
