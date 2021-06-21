@@ -209,7 +209,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
 
 @log
 def admin_list_all_wishes(update: Update, ctx: CallbackContext):
-    conf = get_config()
+    conf = ctx.bot_data['config']
     for wish in ctx.bot_data['wishes'].values():
         if wish['status'] != DONE:
             continue

@@ -1,19 +1,19 @@
 from telegram.ext import CommandHandler, Filters, MessageHandler, ConversationHandler, CallbackQueryHandler
 
-from src.base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish
+from src.base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish, restricted
 from src.button_handlers import button_handler, make_wish_handler, incorrect_wish_handler, remove_wish_handler, \
     take_wish_handler, fulfill_wish_handler, proof_handler
 from src.constants import toplevel_buttons, admin_buttons, MAKE_WISH, drop_wish_inline_btn, take_wish_inline_btn, \
     fulfill_wish_inline_btn, WAITING_FOR_PROOF
 
 
-def setup_handlers(updater):
+def setup_handlers(updater, admin_ids: list[int]):
     dispatcher = updater.dispatcher
     persist = updater.persistence is not None
     dispatcher.add_handler(
         CommandHandler("start", start_handler))
     dispatcher.add_handler(
-        CommandHandler("dropwish", drop_wish))
+        CommandHandler("dropwish", restricted(drop_wish, admin_ids)))
     dispatcher.add_handler(
         MessageHandler(Filters.contact, contact_handler))
     dispatcher.add_handler(

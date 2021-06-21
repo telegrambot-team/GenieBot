@@ -7,8 +7,6 @@ from alchemysession import AlchemySessionContainer
 from telethon import TelegramClient, events
 from telethon.tl.types import PeerUser
 
-from config import get_config
-
 signals = (signal.SIGTERM, signal.SIGINT)
 
 
@@ -55,12 +53,11 @@ async def process_bots(bot_list, admin_entities, client, error_counters, msg_tim
                 await client.send_message(admin_ent, f"{bot} doesn't respond")
 
 
-async def run_pinger():
-    conf = get_config()
-    assert conf.pinger_enabled
+async def run_pinger(config):
+    assert config.pinger_enabled
 
     error_counters = {}
-    container = AlchemySessionContainer(conf.db_url)
+    container = AlchemySessionContainer(config.db_url)
     session = container.new_session('session_name_shadow_new')
     loop = asyncio.get_event_loop()
     try:
@@ -70,19 +67,19 @@ async def run_pinger():
         pass
     try:
         async with TelegramClient(session,
-                                  conf.pinger_config.api_id,
-                                  conf.pinger_config.api_hash) as client:
+                                  config.pinger_config.api_id,
+                                  config.pinger_config.api_hash) as client:
             admin_entities = []
-            for admin_id in conf.admin_ids:
+            for admin_id in config.admin_ids:
                 admin_entities.append(await client.get_entity(PeerUser(admin_id)))
-            for bot in conf.pinger_config.bot_list:
+            for bot in config.pinger_config.bot_list:
                 error_counters[bot] = 0
             while True:
-                await process_bots(conf.pinger_config.bot_list,
+                await process_bots(config.pinger_config.bot_list,
                                    admin_entities,
                                    client, error_counters,
-                                   conf.pinger_config.msg_timeout)
+                                   config.pinger_config.msg_timeout)
                 logging.info("Sleeping")
-                await asyncio.sleep(conf.pinger_config.pinger_sleep_time)
+                await asyncio.sleep(config.pinger_config.pinger_sleep_time)
     except asyncio.CancelledError:
         logging.info("Pinger was cancelled")

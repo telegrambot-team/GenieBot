@@ -8,7 +8,7 @@ from typing import List
 config_instance = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class PingerConfig:
     api_id: int
     api_hash: str
@@ -17,7 +17,7 @@ class PingerConfig:
     pinger_sleep_time: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class Config:
     bot_token: str
     db_url: str
@@ -25,6 +25,12 @@ class Config:
     arthur_id: int
     pinger_enabled: bool
     pinger_config: PingerConfig
+
+
+@dataclass
+class BotData:
+    wishes: dict[int, dict]
+    config: Config
 
 
 def get_config():

@@ -40,14 +40,15 @@ class TestPersistence(unittest.TestCase):
         self.test_conf = TestConf(
             db_url="sqlite:///" + self.db_file,
             bot_token=os.environ['BOT_TOKEN'],
-            tg_client_0=self.tg_client_wrapper.client
+            admin_ids=[99988303],
+            arthur_id=99988303
         )
 
     def test_contact_persists(self):
-        with scoped_bot(self.test_conf) as helper:
+        with scoped_bot(self.test_conf, self.tg_client_wrapper.client) as helper:
             helper.login_bot()
 
-        with scoped_bot(self.test_conf) as helper:
+        with scoped_bot(self.test_conf, self.tg_client_wrapper.client) as helper:
             helper.send_message('123')
             msg = helper.get_unread_messages()
             self.assertEqual(msg.text, default_handler_text)

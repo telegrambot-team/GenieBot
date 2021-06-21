@@ -6,6 +6,7 @@ import time
 import traceback
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
@@ -13,11 +14,19 @@ from src.constants import MAKE_WISH, toplevel_buttons, SELECT_WISH, FULFILLED_LI
 from src.main import create_bot
 
 
+def init_session(session_path, api_id, api_hash):
+    with TelegramClient(session_path, api_id, api_hash) as client:
+        client.start()
+
+
 class ClientHelper:
     def __init__(self, session_path):
+        load_dotenv('tests/.env')
         self.stack = contextlib.ExitStack()
         api_id = int(os.environ['API_ID'])
         api_hash = os.environ['API_HASH']
+        if not os.path.exists(session_path):
+            init_session(session_path, api_id, api_hash)
         self.client = TelegramClient(session_path, api_id, api_hash)
         self.resource = self.stack.enter_context(self.client)
         self.me = self.client.get_me()
@@ -26,18 +35,18 @@ class ClientHelper:
         self.stack.close()
 
 
-@dataclass
+@dataclass(frozen=True)
 class TestConf:
     db_url: str
     bot_token: str
-    tg_client_0: TelegramClient
-    tg_client_1: TelegramClient = None
+    admin_ids: list[int]
+    arthur_id: int
 
 
 class ConversationHelper:
-    def __init__(self, conf: TestConf):
-        self.tg_client_0 = conf.tg_client_0
-        self.tg_client_1 = conf.tg_client_1
+    def __init__(self, conf: TestConf, tg_client_0, tg_client_1=None):
+        self.tg_client_0 = tg_client_0
+        self.tg_client_1 = tg_client_1
         self.bot_updater = create_bot(conf)
         self.bot_name = self.bot_updater.bot.name
         self.bot_updater.start_polling()
@@ -68,7 +77,7 @@ class ConversationHelper:
         # noinspection PyTypeChecker
         client.send_read_acknowledge(self.bot_name)
 
-    def get_unread_messages(self, timeout=10):
+    def get_unread_messages(self, timeout=20):
         now = time.time()
         while True:
             # noinspection PyTypeChecker
@@ -100,11 +109,11 @@ class ConversationHelper:
 
 
 @contextlib.contextmanager
-def scoped_bot(conf):
-    bot = ConversationHelper(conf)
+def scoped_bot(conf, client_0, client_1=None):
+    bot = ConversationHelper(conf, client_0, client_1)
     try:
         yield bot
-    except:
+    except Exception:
         traceback.print_exc()
         raise
     finally:

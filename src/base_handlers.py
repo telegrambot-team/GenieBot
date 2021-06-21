@@ -10,15 +10,14 @@ from src.constants import start_msg, request_contact_text, default_handler_text,
     admin_buttons, toplevel_buttons, WISHES_IN_PROGRESS, MY_WISHES, FULFILLED_LIST, SELECT_WISH, MAKE_WISH, REMOVED
 
 
-def restricted(func):
+def restricted(func, admin_ids: list[int]):
     @wraps(func)
     def wrapped(update, context: CallbackContext, *args, **kwargs) -> None:
         user_id = update.effective_user.id
-        conf = get_config()
-        if user_id not in conf.admin_ids:
+        if user_id not in admin_ids:
             text = f"Unauthorized access denied for {user_id}"
             logging.warning(text)
-            msg_admin(context.bot, text)
+            msg_admin(context.bot_data['config'].admin_ids, context.bot, text)
             return
         func(update, context, *args, **kwargs)
 
@@ -42,32 +41,30 @@ def default_handler(update: Update, ctx: CallbackContext):
     if 'contact' not in ctx.user_data:
         start_handler(update, ctx)
         return
+    is_arthur = ctx.bot_data['config'].arthur_id == update.effective_user.id
     update.message.reply_text(default_handler_text,
-                              reply_markup=get_toplevel_markup(update.effective_user.id))
+                              reply_markup=get_toplevel_markup(is_arthur))
 
 
-def get_toplevel_markup(user_id):
+def get_toplevel_markup(is_arthur):
     xs = [[toplevel_buttons[MAKE_WISH],
            toplevel_buttons[SELECT_WISH]],
           [toplevel_buttons[FULFILLED_LIST],
            toplevel_buttons[MY_WISHES],
            toplevel_buttons[WISHES_IN_PROGRESS]]]
-    conf = get_config()
-    if user_id == conf.arthur_id:
+    if is_arthur:
         xs.append([
             admin_buttons[ADMIN_ALL_WISHES]
         ])
     return ReplyKeyboardMarkup(xs, resize_keyboard=True)
 
 
-def msg_admin(bot, message, **kwargs):
-    conf = get_config()
-    for admin_id in conf.admin_ids:
+def msg_admin(admin_ids, bot, message, **kwargs):
+    for admin_id in admin_ids:
         bot.send_message(chat_id=admin_id, text=message, **kwargs)
 
 
 @log
-@restricted
 def drop_wish(update: Update, ctx: CallbackContext):
     # TODO: fix this, doesn't work
     chat_to_delete, wish_to_delete = map(int, ctx.args[0].split(":"))
@@ -92,10 +89,11 @@ def drop_wish(update: Update, ctx: CallbackContext):
 def ups_handler(update, context):
     chat_id = update.effective_chat.id or ""
     logging.exception(context.error)
-    msg_admin(context.bot, f'Following error occurred:\n'
-                           f'{chat_id}\n'
-                           f'{type(context.error)=}\n'
-                           f'msg={context.error}')
+    msg_admin(context.bot_data['config'].admin_ids, context.bot,
+              f'Following error occurred:\n'
+              f'{chat_id}\n'
+              f'{type(context.error)=}\n'
+              f'msg={context.error}')
 
 
 @log
@@ -115,6 +113,7 @@ def contact_handler(update: Update, ctx: CallbackContext):
     main_handler(update, ctx)
 
 
-def main_handler(update: Update, _: CallbackContext):
+def main_handler(update: Update, ctx: CallbackContext):
+    is_arthur = ctx.bot_data['config'].arthur_id == update.effective_user.id
     update.message.reply_text(intro_msg,
-                              reply_markup=get_toplevel_markup(update.effective_user.id))
+                              reply_markup=get_toplevel_markup(is_arthur))

@@ -2,10 +2,12 @@ import logging
 import asyncio
 import sys
 
+from telegram.ext.contexttypes import ContextTypes
+
 from src.handlers_setup import setup_handlers
 from telegram.ext import Updater
 
-from src.config import get_config
+from src.config import get_config, BotData
 from src.db_persistence import DBPersistence
 
 # hack for tornado ioloop
@@ -20,8 +22,10 @@ def create_bot(conf):
     else:
         persistence = None
         logging.warning("Persistence disabled")
-    updater = Updater(conf.bot_token, use_context=True, persistence=persistence)
-    setup_handlers(updater)
+    context_types = ContextTypes(bot_data=BotData)
+    updater = Updater(conf.bot_token, use_context=True, persistence=persistence, context_types=context_types)
+    setup_handlers(updater, conf.admin_ids)
+    updater.dispatcher.bot_data['config'] = conf
     return updater
 
 
@@ -39,7 +43,7 @@ def main():
 
     if conf.pinger_enabled:
         from bot_pinger import run_pinger
-        asyncio.run(run_pinger())
+        asyncio.run(run_pinger(conf))
     else:
         updater.idle()
     if updater.running:

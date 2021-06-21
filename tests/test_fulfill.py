@@ -37,10 +37,10 @@ class TestFulfill(unittest.TestCase):
         test_conf = TestConf(
             db_url="",
             bot_token=os.environ['BOT_TOKEN'],
-            tg_client_0=self.tg_client_wrapper_0.client,
-            tg_client_1=self.tg_client_wrapper_1.client
+            admin_ids=[99988303],
+            arthur_id=99988303
         )
-        self.conversation_helper = ConversationHelper(test_conf)
+        self.conversation_helper = ConversationHelper(test_conf, self.tg_client_wrapper_0.client, self.tg_client_wrapper_1.client)
 
     def tearDown(self) -> None:
         self.conversation_helper.stop_bot()
