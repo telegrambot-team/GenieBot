@@ -3,11 +3,14 @@ import traceback
 from collections import defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
+from dataclasses import asdict
 
 from sqlalchemy import create_engine, Integer, Column, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from telegram.ext import BasePersistence
+
+import src.config as config
 
 Base = declarative_base()
 
@@ -20,7 +23,7 @@ def session_scope(SessionCls):
     try:
         yield session
         session.commit()
-    except:
+    except Exception:
         traceback.print_exc()
         session.rollback()
         raise
@@ -55,7 +58,7 @@ class DBPersistence(BasePersistence):
         self.connection_string = connection_string
         self.user_data = defaultdict(dict)
         self.chat_data = defaultdict(dict)
-        self.bot_data = defaultdict(dict)
+        self.bot_data = config.BotData(config=config.get_config())
         self.conversation_data = {}
         connect_args = {}
         if self.connection_string.startswith('sqlite'):
@@ -71,8 +74,10 @@ class DBPersistence(BasePersistence):
         with session_scope(self.Session) as session:
             self._load(session, from_table=UserData, dst=self.user_data)
             self._load(session, from_table=ChatData, dst=self.chat_data)
-            self._load(session, from_table=BotData, dst=self.bot_data)
-            self.bot_data = self.bot_data[0] if 0 in self.bot_data else self.bot_data
+            bot_data_from_table: dict[int, dict] = {}
+            self._load(session, from_table=BotData, dst=bot_data_from_table)
+            if 0 in bot_data_from_table:
+                self.bot_data = config.BotData(**bot_data_from_table[0])
             self._load(session, from_table=ConversationData, dst=self.conversation_data)
 
     @staticmethod
@@ -117,7 +122,7 @@ class DBPersistence(BasePersistence):
                 session.merge(UserData(id=user_id, data=data)) # noqa
             for chat_id, data in self.chat_data.items():
                 session.merge(ChatData(id=chat_id, data=data)) # noqa
-            session.merge(BotData(id=0, data=self.bot_data)) # noqa
+            session.merge(BotData(id=0, data=asdict(self.bot_data))) # noqa
             for chat_id, data in self.conversation_data.items():
                 session.merge(ConversationData(id=chat_id, data=data)) # noqa
         self.engine.dispose()
@@ -142,4 +147,4 @@ class DBPersistence(BasePersistence):
         logging.info(f"Updating bot_data with {data}")
         self.bot_data = data
         with session_scope(self.Session) as session:
-            session.merge(BotData(id=0, data=self.bot_data)) # noqa
+            session.merge(BotData(id=0, data=asdict(self.bot_data))) # noqa

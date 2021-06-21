@@ -25,7 +25,8 @@ def create_bot(conf):
     context_types = ContextTypes(bot_data=BotData)
     updater = Updater(conf.bot_token, use_context=True, persistence=persistence, context_types=context_types)
     setup_handlers(updater, conf.admin_ids)
-    updater.dispatcher.bot_data['config'] = conf
+    # TODO: remove duplicate code in persistence
+    updater.dispatcher.bot_data.config = conf
     return updater
 
 

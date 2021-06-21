@@ -17,7 +17,7 @@ def restricted(func, admin_ids: list[int]):
         if user_id not in admin_ids:
             text = f"Unauthorized access denied for {user_id}"
             logging.warning(text)
-            msg_admin(context.bot_data['config'].admin_ids, context.bot, text)
+            msg_admin(context.bot_data.config.admin_ids, context.bot, text)
             return
         func(update, context, *args, **kwargs)
 
@@ -25,9 +25,7 @@ def restricted(func, admin_ids: list[int]):
 
 
 @log
-def start_handler(update: Update, ctx: CallbackContext):
-    if 'wishes' not in ctx.bot_data:
-        ctx.bot_data['wishes'] = {}
+def start_handler(update: Update, _: CallbackContext):
     update.message.reply_text(start_msg,
                               reply_markup=ReplyKeyboardMarkup(
                                   [[KeyboardButton(
@@ -41,7 +39,7 @@ def default_handler(update: Update, ctx: CallbackContext):
     if 'contact' not in ctx.user_data:
         start_handler(update, ctx)
         return
-    is_arthur = ctx.bot_data['config'].arthur_id == update.effective_user.id
+    is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
     update.message.reply_text(default_handler_text,
                               reply_markup=get_toplevel_markup(is_arthur))
 
@@ -73,7 +71,7 @@ def drop_wish(update: Update, ctx: CallbackContext):
         update.message.reply_text("Неверные параметры")
         return
     wish_id = user_data['wishes']['created'][wish_to_delete]
-    wish = ctx.bot_data['wishes'][str(wish_id)]
+    wish = ctx.bot_data.wishes[str(wish_id)]
     # TODO: add other statuses
     if 'fulfiller_id' in wish:
         fulfiller_data = ctx.dispatcher.user_data.get(wish['fulfiller_id'])
@@ -89,7 +87,7 @@ def drop_wish(update: Update, ctx: CallbackContext):
 def ups_handler(update, context):
     chat_id = update.effective_chat.id or ""
     logging.exception(context.error)
-    msg_admin(context.bot_data['config'].admin_ids, context.bot,
+    msg_admin(context.bot_data.config.admin_ids, context.bot,
               f'Following error occurred:\n'
               f'{chat_id}\n'
               f'{type(context.error)=}\n'
@@ -114,6 +112,6 @@ def contact_handler(update: Update, ctx: CallbackContext):
 
 
 def main_handler(update: Update, ctx: CallbackContext):
-    is_arthur = ctx.bot_data['config'].arthur_id == update.effective_user.id
+    is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
     update.message.reply_text(intro_msg,
                               reply_markup=get_toplevel_markup(is_arthur))

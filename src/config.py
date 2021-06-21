@@ -8,7 +8,7 @@ from typing import List
 config_instance = None
 
 
-@dataclass(frozen=True)
+@dataclass
 class PingerConfig:
     api_id: int
     api_hash: str
@@ -17,7 +17,7 @@ class PingerConfig:
     pinger_sleep_time: int
 
 
-@dataclass(frozen=True)
+@dataclass
 class Config:
     bot_token: str
     db_url: str
@@ -29,12 +29,11 @@ class Config:
 
 @dataclass
 class BotData:
-    wishes: dict[int, dict]
-    config: Config
+    wishes = dict[int, dict]()
+    config: Config = None
 
 
 def get_config():
-    # TODO: Should be passed to bot only once to prevent getting variables from separate configs
     global config_instance
     if config_instance:
         return config_instance

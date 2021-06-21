@@ -20,7 +20,7 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
         update.message.reply_text("Будем считать это случайностью\N{Winking Face}")
         return MAKE_WISH
 
-    wish_id = len(ctx.bot_data['wishes'])
+    wish_id = len(ctx.bot_data.wishes)
     new_wish = {
         'wish_id': wish_id,
         'creator_id': update.effective_user.id,
@@ -30,7 +30,7 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
         'proof_msg_id': None
     }
     # str is used because of storing dict as json; json can not have int keys
-    ctx.bot_data['wishes'][str(wish_id)] = new_wish
+    ctx.bot_data.wishes[str(wish_id)] = new_wish
     ctx.user_data['wishes']['created'].append(wish_id)
 
     update.message.reply_text(lock_and_load)
@@ -45,7 +45,7 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
     ctx.user_data['list_wish_msg_id'] = {}
 
     for wish_id in ctx.user_data['wishes']['created']:
-        wish = ctx.bot_data['wishes'][str(wish_id)]
+        wish = ctx.bot_data.wishes[str(wish_id)]
         if wish['status'] == WAITING:
             kbd = InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton('Удалить',
@@ -78,7 +78,7 @@ def remove_wish_handler(update: Update, ctx: CallbackContext):
     ctx.bot.delete_message(chat_id, msg_id)
 
     ctx.user_data['wishes']['created'].remove(wish_id)
-    wish = ctx.bot_data['wishes'][str(wish_id)]
+    wish = ctx.bot_data.wishes[str(wish_id)]
     if wish['status'] == IN_PROGRESS:
         fulfiller_data = ctx.dispatcher.user_data.get(wish['fulfiller_id'])
         fulfiller_data['wishes']['in_progress'].remove(wish_id)
@@ -96,7 +96,7 @@ def select_wish(update: Update, ctx: CallbackContext):
 
     counter = 0
 
-    for wish in ctx.bot_data['wishes'].values():
+    for wish in ctx.bot_data.wishes.values():
         if wish['creator_id'] == chat_id or wish['status'] != WAITING:
             continue
         kbd = InlineKeyboardMarkup.from_button(
@@ -120,7 +120,7 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     for msg_id in ctx.user_data['select_wish_msg_id']:
         ctx.bot.delete_message(chat_id, msg_id)
 
-    wish = ctx.bot_data['wishes'][str(wish_id)]
+    wish = ctx.bot_data.wishes[str(wish_id)]
     wish['status'] = IN_PROGRESS
     wish['fulfiller_id'] = chat_id
 
@@ -142,8 +142,8 @@ def list_fulfilled(update: Update, ctx: CallbackContext):
         update.message.reply_text(no_self_wishes)
         return
     for wish_id in ctx.user_data['wishes']['done']:
-        wish_text = ctx.bot_data['wishes'][str(wish_id)]['text']
-        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data['wishes'][str(wish_id)]['creator_id'])
+        wish_text = ctx.bot_data.wishes[str(wish_id)]['text']
+        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data.wishes[str(wish_id)]['creator_id'])
         creator_name, creator_phone = creator_data['contact']
         msg_text = f'{wish_text}\n{creator_name} \N{em dash} {creator_phone}'
         update.message.reply_text(msg_text,
@@ -158,7 +158,7 @@ def list_in_progress(update: Update, ctx: CallbackContext):
 
     ctx.user_data['fulfill_wish_msg_id'] = []
     for wish_id in ctx.user_data['wishes']['in_progress']:
-        wish = ctx.bot_data['wishes'][str(wish_id)]
+        wish = ctx.bot_data.wishes[str(wish_id)]
         assert wish['status'] == IN_PROGRESS
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton('Отправить фото или видео',
@@ -194,7 +194,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
         update.message.reply_text('Отправьте фото или видео')
         return WAITING_FOR_PROOF
     wish_id = ctx.user_data['wish_waiting_for_proof']
-    wish = ctx.bot_data['wishes'][str(wish_id)]
+    wish = ctx.bot_data.wishes[str(wish_id)]
     wish['status'] = DONE
     wish['proof_msg_id'] = update.message.message_id
     ctx.user_data['wishes']['done'].append(wish_id)
@@ -209,8 +209,8 @@ def proof_handler(update: Update, ctx: CallbackContext):
 
 @log
 def admin_list_all_wishes(update: Update, ctx: CallbackContext):
-    conf = ctx.bot_data['config']
-    for wish in ctx.bot_data['wishes'].values():
+    conf = ctx.bot_data.config
+    for wish in ctx.bot_data.wishes.values():
         if wish['status'] != DONE:
             continue
 

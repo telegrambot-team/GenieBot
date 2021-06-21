@@ -35,7 +35,7 @@ class ClientHelper:
         self.stack.close()
 
 
-@dataclass(frozen=True)
+@dataclass
 class TestConf:
     db_url: str
     bot_token: str
