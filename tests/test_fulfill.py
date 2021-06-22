@@ -5,7 +5,7 @@ import unittest
 
 from dotenv import load_dotenv
 
-from src.constants import wish_taken, magick_begins
+from src.constants import wish_taken, magick_begins, toplevel_buttons, MAKE_WISH, SELECT_WISH
 from tests.utils import ClientHelper, TestConf, ConversationHelper
 
 
@@ -51,7 +51,7 @@ class TestFulfill(unittest.TestCase):
 
     def test_fulfill(self):
         control_msg_0 = self.conversation_helper.login_bot()
-        control_msg_0.click(0)
+        control_msg_0.click(text=toplevel_buttons[MAKE_WISH])
         wish_txt = "Some wish text"
         self.conversation_helper.send_message(wish_txt)
         time.sleep(1)
@@ -59,10 +59,10 @@ class TestFulfill(unittest.TestCase):
 
         self.conversation_helper.switch_client()
         control_msg_1 = self.conversation_helper.login_bot()
-        control_msg_1.click(1)
+        control_msg_1.click(text=toplevel_buttons[SELECT_WISH])
         wish_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(wish_msg.text, wish_txt)
-        wish_msg.click(0)
+        wish_msg.click(text="Взять")
         wish_reply_msg = self.conversation_helper.get_unread_messages()
         phone = self.tg_client_wrapper_0.me.phone
         if not phone.startswith("+"):

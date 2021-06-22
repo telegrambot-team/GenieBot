@@ -11,7 +11,7 @@ from src.constants import (
     intro_msg,
     waiting_for_wish,
     lock_and_load,
-    no_self_created_wishes,
+    no_self_created_wishes, toplevel_buttons, MY_WISHES, MAKE_WISH,
 )
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
@@ -78,12 +78,12 @@ class TestCrudWishes(unittest.TestCase):
 
     def test_crud(self):
         control_msg = self.conversation_helper.login_bot()
-        control_msg.click(1, 1)
+        control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, no_self_created_wishes)
 
         # добавляем первое
-        control_msg.click(0)
+        control_msg.click(text=toplevel_buttons[MAKE_WISH])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, waiting_for_wish)
         wish_txt_0 = "wgregueng 230t23j\nefowefn110"
@@ -93,13 +93,13 @@ class TestCrudWishes(unittest.TestCase):
         self.assertEqual(new_msg.text, lock_and_load)
 
         # проверяем, что добавилось
-        control_msg.click(1, 1)
+        control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, wish_txt_0)
         # TODO: add check for inline button
 
         # добавляем второе
-        control_msg.click(0)
+        control_msg.click(text=toplevel_buttons[MAKE_WISH])
         self.conversation_helper.mark_read()
         self.conversation_helper.send_message(wish_txt_1)
         time.sleep(1)
@@ -107,20 +107,20 @@ class TestCrudWishes(unittest.TestCase):
         self.assertEqual(new_msg.text, lock_and_load)
 
         # проверяем, что добавилось
-        control_msg.click(1, 1)
+        control_msg.click(text=toplevel_buttons[MY_WISHES])
         time.sleep(1)
         new_messages = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_messages[1].text, wish_txt_0)
         self.assertEqual(new_messages[0].text, wish_txt_1)
-        new_messages[0].click(0)
+        new_messages[0].click(text='Удалить')
 
         # удаляем второе
-        control_msg.click(1, 1)
+        control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, wish_txt_0)
 
         # удаляем первое
-        new_msg.click(0)
-        control_msg.click(1, 1)
+        new_msg.click(text='Удалить')
+        control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, no_self_created_wishes)

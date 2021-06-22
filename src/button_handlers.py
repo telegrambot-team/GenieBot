@@ -3,7 +3,6 @@ from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 
 from src.base_handlers import start_handler
-from src.config import get_config
 from src.constants import (
     toplevel_buttons,
     WAITING_FOR_PROOF,
