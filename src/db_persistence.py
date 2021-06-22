@@ -58,7 +58,7 @@ class DBPersistence(BasePersistence):
         self.connection_string = connection_string
         self.user_data = defaultdict(dict)
         self.chat_data = defaultdict(dict)
-        self.bot_data = config.BotData(config=config.get_config())
+        self.bot_data = config.BotData()
         self.conversation_data = {}
         connect_args = {}
         if self.connection_string.startswith('sqlite'):
