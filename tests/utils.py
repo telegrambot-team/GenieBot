@@ -10,7 +10,14 @@ from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
-from src.constants import MAKE_WISH, toplevel_buttons, SELECT_WISH, FULFILLED_LIST, MY_WISHES, WISHES_IN_PROGRESS
+from src.constants import (
+    MAKE_WISH,
+    toplevel_buttons,
+    SELECT_WISH,
+    FULFILLED_LIST,
+    MY_WISHES,
+    WISHES_IN_PROGRESS,
+)
 from src.main import create_bot
 
 
@@ -21,10 +28,10 @@ def init_session(session_path, api_id, api_hash):
 
 class ClientHelper:
     def __init__(self, session_path):
-        load_dotenv('tests/.env')
+        load_dotenv("tests/.env")
         self.stack = contextlib.ExitStack()
-        api_id = int(os.environ['API_ID'])
-        api_hash = os.environ['API_HASH']
+        api_id = int(os.environ["API_ID"])
+        api_hash = os.environ["API_HASH"]
         if not os.path.exists(session_path):
             init_session(session_path, api_id, api_hash)
         self.client = TelegramClient(session_path, api_id, api_hash)
@@ -61,9 +68,9 @@ class ConversationHelper:
 
     def get_unread_count(self):
         # noinspection PyTypeChecker
-        result = self.current_client(functions.messages.GetPeerDialogsRequest(
-            peers=[self.bot_name]
-        ))
+        result = self.current_client(
+            functions.messages.GetPeerDialogsRequest(peers=[self.bot_name])
+        )
         return result.dialogs[0].unread_count
 
     def send_message(self, txt):
@@ -84,8 +91,13 @@ class ConversationHelper:
             unread_count = self.get_unread_count()
             if unread_count:
                 # noinspection PyTypeChecker
-                lst = [m for m in itertools.islice(self.current_client.iter_messages(self.bot_name),
-                                                   unread_count) if m.sender.bot]
+                lst = [
+                    m
+                    for m in itertools.islice(
+                        self.current_client.iter_messages(self.bot_name), unread_count
+                    )
+                    if m.sender.bot
+                ]
                 # noinspection PyTypeChecker
                 self.current_client.send_read_acknowledge(self.bot_name)
                 logging.info([m.text for m in lst])
@@ -96,7 +108,7 @@ class ConversationHelper:
         raise TimeoutError("No messages delivered in time")
 
     def login_bot(self):
-        self.send_message('/start')
+        self.send_message("/start")
         msg = self.get_unread_messages()
         msg.click(share_phone=True)
         return self.get_unread_messages()
@@ -121,13 +133,18 @@ def scoped_bot(conf, client_0, client_1=None):
 
 
 def check_intro_markup(self, msg):
-    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
-                     toplevel_buttons[MAKE_WISH])
-    self.assertEqual(msg.reply_markup.rows[0].buttons[1].text,
-                     toplevel_buttons[SELECT_WISH])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[0].text,
-                     toplevel_buttons[FULFILLED_LIST])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[1].text,
-                     toplevel_buttons[MY_WISHES])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[2].text,
-                     toplevel_buttons[WISHES_IN_PROGRESS])
+    self.assertEqual(
+        msg.reply_markup.rows[0].buttons[0].text, toplevel_buttons[MAKE_WISH]
+    )
+    self.assertEqual(
+        msg.reply_markup.rows[0].buttons[1].text, toplevel_buttons[SELECT_WISH]
+    )
+    self.assertEqual(
+        msg.reply_markup.rows[1].buttons[0].text, toplevel_buttons[FULFILLED_LIST]
+    )
+    self.assertEqual(
+        msg.reply_markup.rows[1].buttons[1].text, toplevel_buttons[MY_WISHES]
+    )
+    self.assertEqual(
+        msg.reply_markup.rows[1].buttons[2].text, toplevel_buttons[WISHES_IN_PROGRESS]
+    )

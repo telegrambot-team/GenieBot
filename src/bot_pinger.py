@@ -11,9 +11,8 @@ signals = (signal.SIGTERM, signal.SIGINT)
 
 
 async def shutdown_handler(signum, loop):
-    logging.info(f'Got signal {signum.name}, shutting down')
-    tasks = [t for t in asyncio.all_tasks() if t is not
-             asyncio.current_task()]
+    logging.info(f"Got signal {signum.name}, shutting down")
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
 
     [task.cancel() for task in tasks]
     logging.info(f"Cancelling {len(tasks)} outstanding tasks")
@@ -41,7 +40,7 @@ async def process_bots(bot_list, admin_entities, client, error_counters, msg_tim
             await event.message.mark_read()
             error_counters[bot] = 0
 
-        msg = await client.send_message(bot, '/start')
+        msg = await client.send_message(bot, "/start")
         logging.info(msg)
 
         if not await event_wait(got_reply, msg_timeout):
@@ -58,27 +57,32 @@ async def run_pinger(config):
 
     error_counters = {}
     container = AlchemySessionContainer(config.db_url)
-    session = container.new_session('session_name_shadow_new')
+    session = container.new_session("session_name_shadow_new")
     loop = asyncio.get_event_loop()
     try:
         for s in signals:
-            loop.add_signal_handler(s, lambda: asyncio.create_task(shutdown_handler(s, loop)))
+            loop.add_signal_handler(
+                s, lambda: asyncio.create_task(shutdown_handler(s, loop))
+            )
     except NotImplementedError:
         pass
     try:
-        async with TelegramClient(session,
-                                  config.pinger_config.api_id,
-                                  config.pinger_config.api_hash) as client:
+        async with TelegramClient(
+            session, config.pinger_config.api_id, config.pinger_config.api_hash
+        ) as client:
             admin_entities = []
             for admin_id in config.admin_ids:
                 admin_entities.append(await client.get_entity(PeerUser(admin_id)))
             for bot in config.pinger_config.bot_list:
                 error_counters[bot] = 0
             while True:
-                await process_bots(config.pinger_config.bot_list,
-                                   admin_entities,
-                                   client, error_counters,
-                                   config.pinger_config.msg_timeout)
+                await process_bots(
+                    config.pinger_config.bot_list,
+                    admin_entities,
+                    client,
+                    error_counters,
+                    config.pinger_config.msg_timeout,
+                )
                 logging.info("Sleeping")
                 await asyncio.sleep(config.pinger_config.pinger_sleep_time)
     except asyncio.CancelledError:

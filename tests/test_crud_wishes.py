@@ -5,26 +5,33 @@ import unittest
 
 from dotenv import load_dotenv
 
-from src.constants import start_msg, request_contact_text, intro_msg, waiting_for_wish, lock_and_load, \
-    no_self_created_wishes
+from src.constants import (
+    start_msg,
+    request_contact_text,
+    intro_msg,
+    waiting_for_wish,
+    lock_and_load,
+    no_self_created_wishes,
+)
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO,
-                        format='%(filename)s: '
-                               '%(levelname)s: '
-                               '%(funcName)s(): '
-                               '%(lineno)d:\t'
-                               '%(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(filename)s: "
+        "%(levelname)s: "
+        "%(funcName)s(): "
+        "%(lineno)d:\t"
+        "%(message)s",
+    )
 
-    load_dotenv('tests/test_data/.testenv')
+    load_dotenv("tests/test_data/.testenv")
 
 
 def check_start_msg(self, msg):
     self.assertEqual(msg.text, start_msg)
-    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text,
-                     request_contact_text)
+    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text, request_contact_text)
 
 
 def check_intro_msg(self, msg):
@@ -36,7 +43,7 @@ class TestCrudWishes(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.tg_client_wrapper = ClientHelper('tests/test_data/sess')
+        cls.tg_client_wrapper = ClientHelper("tests/test_data/sess")
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -45,21 +52,23 @@ class TestCrudWishes(unittest.TestCase):
     def setUp(self) -> None:
         test_conf = TestConf(
             db_url="",
-            bot_token=os.environ['BOT_TOKEN'],
+            bot_token=os.environ["BOT_TOKEN"],
             admin_ids=[99988303],
-            arthur_id=99988303
+            arthur_id=99988303,
         )
-        self.conversation_helper = ConversationHelper(test_conf, self.tg_client_wrapper.client)
+        self.conversation_helper = ConversationHelper(
+            test_conf, self.tg_client_wrapper.client
+        )
 
     def tearDown(self) -> None:
         self.conversation_helper.stop_bot()
 
     def test_start(self):
-        self.conversation_helper.send_message('/start')
+        self.conversation_helper.send_message("/start")
         msg = self.conversation_helper.get_unread_messages()
         check_start_msg(self, msg)
 
-        self.conversation_helper.send_message('23525')
+        self.conversation_helper.send_message("23525")
         msg = self.conversation_helper.get_unread_messages()
         check_start_msg(self, msg)
 

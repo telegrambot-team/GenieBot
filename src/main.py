@@ -11,7 +11,7 @@ from src.config import get_config, BotData
 from src.db_persistence import DBPersistence
 
 # hack for tornado ioloop
-if sys.platform == 'win32':
+if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
@@ -23,7 +23,12 @@ def create_bot(conf):
         persistence = None
         logging.warning("Persistence disabled")
     context_types = ContextTypes(bot_data=BotData)
-    updater = Updater(conf.bot_token, use_context=True, persistence=persistence, context_types=context_types)
+    updater = Updater(
+        conf.bot_token,
+        use_context=True,
+        persistence=persistence,
+        context_types=context_types,
+    )
     setup_handlers(updater, conf.admin_ids)
     updater.dispatcher.bot_data.config = conf
     updater.dispatcher.update_persistence()
@@ -31,12 +36,14 @@ def create_bot(conf):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO,
-                        format='%(filename)s: '
-                               '%(levelname)s: '
-                               '%(funcName)s(): '
-                               '%(lineno)d:\t'
-                               '%(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(filename)s: "
+        "%(levelname)s: "
+        "%(funcName)s(): "
+        "%(lineno)d:\t"
+        "%(message)s",
+    )
     logging.info("Application started")
     conf = get_config()
     updater = create_bot(conf)
@@ -44,6 +51,7 @@ def main():
 
     if conf.pinger_enabled:
         from bot_pinger import run_pinger
+
         asyncio.run(run_pinger(conf))
     else:
         updater.idle()
@@ -52,5 +60,5 @@ def main():
     logging.info("Application shut down")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

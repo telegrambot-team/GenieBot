@@ -37,19 +37,19 @@ class Document:
 
 
 class UserData(Base, Document):
-    __tablename__ = 'user'
+    __tablename__ = "user"
 
 
 class ChatData(Base, Document):
-    __tablename__ = 'chat'
+    __tablename__ = "chat"
 
 
 class BotData(Base, Document):
-    __tablename__ = 'bot'
+    __tablename__ = "bot"
 
 
 class ConversationData(Base, Document):
-    __tablename__ = 'conversation'
+    __tablename__ = "conversation"
 
 
 class DBPersistence(BasePersistence):
@@ -61,11 +61,9 @@ class DBPersistence(BasePersistence):
         self.bot_data = config.BotData()
         self.conversation_data = {}
         connect_args = {}
-        if self.connection_string.startswith('sqlite'):
+        if self.connection_string.startswith("sqlite"):
             connect_args = {"check_same_thread": False}
-        self.engine = create_engine(self.connection_string,
-                                    connect_args=connect_args
-                                    )
+        self.engine = create_engine(self.connection_string, connect_args=connect_args)
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
         self.load_data()
@@ -90,19 +88,23 @@ class DBPersistence(BasePersistence):
     def get_conversations(self, name):
         conversations_by_name = {}
         for user_id, conv_dict in self.conversation_data.items():
-            conversations_by_name[user_id, ] = conv_dict.get(name, None)
+            conversations_by_name[
+                user_id,
+            ] = conv_dict.get(name, None)
         return conversations_by_name
 
     def update_conversation(self, name, key, new_state):
-        chat_id, = key
+        (chat_id,) = key
         if self.conversation_data.setdefault(chat_id, {}).get(name) == new_state:
             return
-        logging.info(f"Updating conversation {name}"
-                     f" with {key=}={new_state}")
+        logging.info(f"Updating conversation {name}" f" with {key=}={new_state}")
         self.conversation_data[chat_id][name] = new_state
         with session_scope(self.Session) as session:
-            session.merge(ConversationData(id=chat_id, # noqa
-                                           data=self.conversation_data[chat_id])) # noqa
+            session.merge(
+                ConversationData(
+                    id=chat_id, data=self.conversation_data[chat_id]  # noqa
+                )
+            )  # noqa
 
     def get_user_data(self):
         return deepcopy(self.user_data)
@@ -113,18 +115,17 @@ class DBPersistence(BasePersistence):
         logging.info(f"Updating {user_id} with {data}")
         self.user_data[user_id] = data
         with session_scope(self.Session) as session:
-            session.merge(UserData(id=user_id, # noqa
-                                   data=data)) # noqa
+            session.merge(UserData(id=user_id, data=data))  # noqa  # noqa
 
     def flush(self):
         with session_scope(self.Session) as session:
             for user_id, data in self.user_data.items():
-                session.merge(UserData(id=user_id, data=data)) # noqa
+                session.merge(UserData(id=user_id, data=data))  # noqa
             for chat_id, data in self.chat_data.items():
-                session.merge(ChatData(id=chat_id, data=data)) # noqa
-            session.merge(BotData(id=0, data=asdict(self.bot_data))) # noqa
+                session.merge(ChatData(id=chat_id, data=data))  # noqa
+            session.merge(BotData(id=0, data=asdict(self.bot_data)))  # noqa
             for chat_id, data in self.conversation_data.items():
-                session.merge(ConversationData(id=chat_id, data=data)) # noqa
+                session.merge(ConversationData(id=chat_id, data=data))  # noqa
         self.engine.dispose()
 
     def get_chat_data(self):
@@ -139,7 +140,7 @@ class DBPersistence(BasePersistence):
         logging.info(f"Updating {chat_id} with {data}")
         self.chat_data[chat_id] = data
         with session_scope(self.Session) as session:
-            session.merge(ChatData(id=chat_id, data=data)) # noqa
+            session.merge(ChatData(id=chat_id, data=data))  # noqa
 
     def update_bot_data(self, data):
         if self.bot_data == data:
@@ -147,4 +148,4 @@ class DBPersistence(BasePersistence):
         logging.info(f"Updating bot_data with {data}")
         self.bot_data = data
         with session_scope(self.Session) as session:
-            session.merge(BotData(id=0, data=asdict(self.bot_data))) # noqa
+            session.merge(BotData(id=0, data=asdict(self.bot_data)))  # noqa

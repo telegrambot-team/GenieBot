@@ -39,28 +39,28 @@ def get_config():
         return config_instance
 
     load_dotenv()
-    token = os.environ['BOT_TOKEN']
-    database_url = os.environ.get('DATABASE_URL') or ''
-    admin_ids = list(map(int, os.environ['ADMIN_IDS'].split(';')))
-    arthur_id = int(os.environ['ARTHUR_ID'])
+    token = os.environ["BOT_TOKEN"]
+    database_url = os.environ.get("DATABASE_URL") or ""
+    admin_ids = list(map(int, os.environ["ADMIN_IDS"].split(";")))
+    arthur_id = int(os.environ["ARTHUR_ID"])
     pinger_enabled = True
 
     try:
-        api_id = int(os.environ['PINGER_API_ID'])
-        api_hash = os.environ['PINGER_API_HASH']
-        bot_list = os.environ['PINGER_BOT_LIST'].split(';')
-        msg_timeout = int(os.environ.get('MSG_TIMEOUT', 15))
-        pinger_sleep_time = int(os.environ.get('PINGER_SLEEP_TIME', 10))
+        api_id = int(os.environ["PINGER_API_ID"])
+        api_hash = os.environ["PINGER_API_HASH"]
+        bot_list = os.environ["PINGER_BOT_LIST"].split(";")
+        msg_timeout = int(os.environ.get("MSG_TIMEOUT", 15))
+        pinger_sleep_time = int(os.environ.get("PINGER_SLEEP_TIME", 10))
         pinger_config = PingerConfig(
             api_id=api_id,
             api_hash=api_hash,
             bot_list=bot_list,
             msg_timeout=msg_timeout,
-            pinger_sleep_time=pinger_sleep_time
+            pinger_sleep_time=pinger_sleep_time,
         )
     except KeyError as e:
         logging.info(repr(e))
-        logging.info('Disabling pinger')
+        logging.info("Disabling pinger")
         pinger_enabled = False
         pinger_config = None
 
@@ -70,6 +70,6 @@ def get_config():
         admin_ids=admin_ids,
         arthur_id=arthur_id,
         pinger_enabled=pinger_enabled,
-        pinger_config=pinger_config
+        pinger_config=pinger_config,
     )
     return config_instance
