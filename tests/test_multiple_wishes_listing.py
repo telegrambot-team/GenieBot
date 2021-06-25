@@ -68,5 +68,6 @@ class TestFulfill(unittest.TestCase):
         control_msg_1.click(text=toplevel_buttons[SELECT_WISH])
         time.sleep(5)
         wishes_msg = self.conversation_helper.get_unread_messages()
-        self.assertListEqual(list(reversed(wish_list)),
-                             list(map(lambda x: x.text, wishes_msg)))
+        self.assertListEqual(
+            list(reversed(wish_list)), list(map(lambda x: x.text, wishes_msg))
+        )

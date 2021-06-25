@@ -1,4 +1,9 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from telegram import (
+    Update,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    ReplyKeyboardMarkup,
+)
 from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 
@@ -46,7 +51,8 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
         if wish["status"] == constants.WAITING:
             kbd = InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    "Удалить", callback_data=f"{constants.drop_wish_inline_btn} {wish_id}"
+                    "Удалить",
+                    callback_data=f"{constants.drop_wish_inline_btn} {wish_id}",
                 )
             )
         elif wish["status"] == constants.IN_PROGRESS:
@@ -99,7 +105,8 @@ def select_wish(update: Update, ctx: CallbackContext):
             continue
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                "Взять", callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}"
+                "Взять",
+                callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}",
             )
         )
         msg = update.message.reply_text(
@@ -243,7 +250,9 @@ def button_handler(update: Update, ctx: CallbackContext):
         return
     text = update.message.text
     if text == constants.toplevel_buttons[constants.MAKE_WISH]:
-        update.message.reply_text(constants.waiting_for_wish, reply_markup=get_cancel_markup())
+        update.message.reply_text(
+            constants.waiting_for_wish, reply_markup=get_cancel_markup()
+        )
         return constants.MAKE_WISH
     elif text == constants.toplevel_buttons[constants.SELECT_WISH]:
         select_wish(update, ctx)
@@ -260,7 +269,9 @@ def button_handler(update: Update, ctx: CallbackContext):
         # TODO: add pagination
         list_my_wishes(update, ctx)
         return ConversationHandler.END
-    # TODO: and if sender is admin
-    elif text == constants.admin_buttons[constants.ADMIN_ALL_WISHES]:
+    elif (
+        text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]
+        and update.effective_user.id == ctx.bot_data.config.arthur_id
+    ):
         admin_list_all_wishes(update, ctx)
         return ConversationHandler.END

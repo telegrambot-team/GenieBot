@@ -5,7 +5,13 @@ import unittest
 
 from dotenv import load_dotenv
 
-from src.constants import wish_taken, magick_begins, toplevel_buttons, MAKE_WISH, SELECT_WISH
+from src.constants import (
+    wish_taken,
+    magick_begins,
+    toplevel_buttons,
+    MAKE_WISH,
+    SELECT_WISH,
+)
 from tests.utils import ClientHelper, TestConf, ConversationHelper
 
 

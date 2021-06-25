@@ -62,6 +62,6 @@ REMOVED = 8
 
 WAITING_FOR_PROOF = 9
 
-ADMIN_ALL_WISHES = 10
+ARTHUR_ALL_WISHES = 10
 
-admin_buttons = {ADMIN_ALL_WISHES: "Админ: список всех желаний"}
+admin_buttons = {ARTHUR_ALL_WISHES: "Админ: список всех желаний"}

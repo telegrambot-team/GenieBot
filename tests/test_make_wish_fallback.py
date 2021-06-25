@@ -13,10 +13,10 @@ def setUpModule():
     logging.basicConfig(
         level=logging.INFO,
         format="%(filename)s: "
-               "%(levelname)s: "
-               "%(funcName)s(): "
-               "%(lineno)d:\t"
-               "%(message)s",
+        "%(levelname)s: "
+        "%(funcName)s(): "
+        "%(lineno)d:\t"
+        "%(message)s",
     )
 
     load_dotenv("tests/test_data/.testenv")

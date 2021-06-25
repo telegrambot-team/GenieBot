@@ -11,7 +11,10 @@ from src.constants import (
     intro_msg,
     waiting_for_wish,
     lock_and_load,
-    no_self_created_wishes, toplevel_buttons, MY_WISHES, MAKE_WISH,
+    no_self_created_wishes,
+    toplevel_buttons,
+    MY_WISHES,
+    MAKE_WISH,
 )
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
@@ -113,7 +116,7 @@ class TestCrudWishes(unittest.TestCase):
         new_messages = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_messages[1].text, wish_txt_0)
         self.assertEqual(new_messages[0].text, wish_txt_1)
-        new_messages[0].click(text='Удалить')
+        new_messages[0].click(text="Удалить")
 
         # удаляем второе
         control_msg.click(text=toplevel_buttons[MY_WISHES])
@@ -121,7 +124,7 @@ class TestCrudWishes(unittest.TestCase):
         self.assertEqual(new_msg.text, wish_txt_0)
 
         # удаляем первое
-        new_msg.click(text='Удалить')
+        new_msg.click(text="Удалить")
         control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, no_self_created_wishes)

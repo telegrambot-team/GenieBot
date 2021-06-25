@@ -11,7 +11,7 @@ from src.constants import (
     request_contact_text,
     default_handler_text,
     intro_msg,
-    ADMIN_ALL_WISHES,
+    ARTHUR_ALL_WISHES,
     admin_buttons,
     toplevel_buttons,
     WISHES_IN_PROGRESS,
@@ -69,7 +69,7 @@ def get_toplevel_markup(is_arthur):
         ],
     ]
     if is_arthur:
-        xs.append([admin_buttons[ADMIN_ALL_WISHES]])
+        xs.append([admin_buttons[ARTHUR_ALL_WISHES]])
     return ReplyKeyboardMarkup(xs, resize_keyboard=True)
 
 
