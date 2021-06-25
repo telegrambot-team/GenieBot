@@ -24,6 +24,7 @@ toplevel_buttons = {
     MY_WISHES: "Мои желания",
 }
 
+cancel_wish_making = "Отмена"
 
 request_contact_text = "Отправить контакт\N{Mobile Phone}"
 

@@ -16,6 +16,7 @@ from src.constants import (
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     logging.basicConfig(
         level=logging.INFO,

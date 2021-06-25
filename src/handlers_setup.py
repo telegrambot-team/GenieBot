@@ -21,7 +21,7 @@ from src.button_handlers import (
     remove_wish_handler,
     take_wish_handler,
     fulfill_wish_handler,
-    proof_handler,
+    proof_handler, cancel_wish_making_handler,
 )
 from src.constants import (
     toplevel_buttons,
@@ -30,7 +30,7 @@ from src.constants import (
     drop_wish_inline_btn,
     take_wish_inline_btn,
     fulfill_wish_inline_btn,
-    WAITING_FOR_PROOF,
+    WAITING_FOR_PROOF, cancel_wish_making,
 )
 
 
@@ -52,6 +52,7 @@ def setup_handlers(updater, admin_ids: list[int]):
             ],
             states={
                 MAKE_WISH: [
+                    MessageHandler(Filters.text([cancel_wish_making]), cancel_wish_making_handler),
                     MessageHandler(Filters.text, make_wish_handler),
                     MessageHandler(Filters.chat_type.private, incorrect_wish_handler),
                 ]

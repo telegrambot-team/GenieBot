@@ -28,7 +28,6 @@ def init_session(session_path, api_id, api_hash):
 
 class ClientHelper:
     def __init__(self, session_path):
-        load_dotenv("tests/.env")
         self.stack = contextlib.ExitStack()
         api_id = int(os.environ["API_ID"])
         api_hash = os.environ["API_HASH"]

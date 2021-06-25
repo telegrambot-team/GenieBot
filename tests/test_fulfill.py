@@ -9,6 +9,7 @@ from src.constants import wish_taken, magick_begins, toplevel_buttons, MAKE_WISH
 from tests.utils import ClientHelper, TestConf, ConversationHelper
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     logging.basicConfig(
         level=logging.INFO,
@@ -34,6 +35,7 @@ class TestFulfill(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         cls.tg_client_wrapper_0.close()
+        cls.tg_client_wrapper_1.close()
 
     def setUp(self) -> None:
         test_conf = TestConf(
