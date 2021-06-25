@@ -23,15 +23,7 @@ from src.button_handlers import (
     fulfill_wish_handler,
     proof_handler, cancel_wish_making_handler,
 )
-from src.constants import (
-    toplevel_buttons,
-    admin_buttons,
-    MAKE_WISH,
-    drop_wish_inline_btn,
-    take_wish_inline_btn,
-    fulfill_wish_inline_btn,
-    WAITING_FOR_PROOF, cancel_wish_making,
-)
+import src.constants as constants
 
 
 def setup_handlers(updater, admin_ids: list[int]):
@@ -45,14 +37,14 @@ def setup_handlers(updater, admin_ids: list[int]):
             entry_points=[
                 MessageHandler(
                     Filters.text(
-                        list(toplevel_buttons.values()) + list(admin_buttons.values())
+                        list(constants.toplevel_buttons.values()) + list(constants.admin_buttons.values())
                     ),
                     button_handler,
                 )
             ],
             states={
-                MAKE_WISH: [
-                    MessageHandler(Filters.text([cancel_wish_making]), cancel_wish_making_handler),
+                constants.MAKE_WISH: [
+                    MessageHandler(Filters.text([constants.cancel_wish_making]), cancel_wish_making_handler),
                     MessageHandler(Filters.text, make_wish_handler),
                     MessageHandler(Filters.chat_type.private, incorrect_wish_handler),
                 ]
@@ -64,20 +56,20 @@ def setup_handlers(updater, admin_ids: list[int]):
         )
     )
     dispatcher.add_handler(
-        CallbackQueryHandler(remove_wish_handler, pattern=f"^{drop_wish_inline_btn}.*")
+        CallbackQueryHandler(remove_wish_handler, pattern=f"^{constants.drop_wish_inline_btn}.*")
     )
     dispatcher.add_handler(
-        CallbackQueryHandler(take_wish_handler, pattern=f"^{take_wish_inline_btn}.*")
+        CallbackQueryHandler(take_wish_handler, pattern=f"^{constants.take_wish_inline_btn}.*")
     )
     dispatcher.add_handler(
         ConversationHandler(
             entry_points=[
                 CallbackQueryHandler(
-                    fulfill_wish_handler, pattern=f"^{fulfill_wish_inline_btn}.*"
+                    fulfill_wish_handler, pattern=f"^{constants.fulfill_wish_inline_btn}.*"
                 )
             ],
             states={
-                WAITING_FOR_PROOF: [
+                constants.WAITING_FOR_PROOF: [
                     MessageHandler(Filters.chat_type.private, proof_handler)
                 ]
             },

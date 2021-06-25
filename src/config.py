@@ -29,7 +29,7 @@ class Config:
 
 @dataclass
 class BotData:
-    wishes = dict[int, dict]()
+    wishes = dict[str, dict]()
     config: Config = None
 
 

@@ -6,7 +6,6 @@ import time
 import traceback
 from dataclasses import dataclass
 
-from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
@@ -86,7 +85,6 @@ class ConversationHelper:
     def get_unread_messages(self, timeout=20):
         now = time.time()
         while True:
-            # noinspection PyTypeChecker
             unread_count = self.get_unread_count()
             if unread_count:
                 # noinspection PyTypeChecker
