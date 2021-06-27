@@ -5,7 +5,8 @@ import unittest
 
 from dotenv import load_dotenv
 
-from src.constants import toplevel_buttons, MAKE_WISH, SELECT_WISH
+from src.button_handlers import is_last_wish
+from src.constants import toplevel_buttons, MAKE_WISH, SELECT_WISH, WISHES_TO_SHOW_LIMIT
 from tests.utils import ClientHelper, TestConf, ConversationHelper
 
 
@@ -69,5 +70,11 @@ class TestFulfill(unittest.TestCase):
         time.sleep(5)
         wishes_msg = self.conversation_helper.get_unread_messages()
         self.assertListEqual(
-            list(reversed(wish_list)), list(map(lambda x: x.text, wishes_msg))
+            wish_list, list(map(lambda x: x.text, wishes_msg))
         )
+
+    def test_is_last_wish(self):
+        self.assertTrue(is_last_wish(0, 5, 6, WISHES_TO_SHOW_LIMIT))
+        self.assertFalse(is_last_wish(2, 5, 10, WISHES_TO_SHOW_LIMIT))
+        self.assertTrue(is_last_wish(0, 0, 1, WISHES_TO_SHOW_LIMIT))
+        self.assertTrue(is_last_wish(4, 0, 6, WISHES_TO_SHOW_LIMIT))

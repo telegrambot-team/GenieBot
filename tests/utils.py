@@ -83,6 +83,7 @@ class ConversationHelper:
         client.send_read_acknowledge(self.bot_name)
 
     def get_unread_messages(self, timeout=20):
+        time.sleep(2)
         now = time.time()
         while True:
             unread_count = self.get_unread_count()

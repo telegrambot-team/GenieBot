@@ -22,7 +22,7 @@ from src.button_handlers import (
     take_wish_handler,
     fulfill_wish_handler,
     proof_handler,
-    cancel_wish_making_handler,
+    cancel_wish_making_handler, control_list_wish_handler,
 )
 import src.constants as constants
 
@@ -67,7 +67,12 @@ def setup_handlers(updater, admin_ids: list[int]):
     )
     dispatcher.add_handler(
         CallbackQueryHandler(
-            take_wish_handler, pattern=f"^{constants.take_wish_inline_btn}.*"
+            take_wish_handler, pattern=f"^{constants.take_wish_inline_btn}.*\\d+"
+        )
+    )
+    dispatcher.add_handler(
+        CallbackQueryHandler(
+            control_list_wish_handler, pattern=f"^{constants.take_wish_inline_btn}.*"
         )
     )
     dispatcher.add_handler(

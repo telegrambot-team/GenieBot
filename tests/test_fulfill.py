@@ -5,13 +5,7 @@ import unittest
 
 from dotenv import load_dotenv
 
-from src.constants import (
-    wish_taken,
-    magick_begins,
-    toplevel_buttons,
-    MAKE_WISH,
-    SELECT_WISH,
-)
+import src.constants
 from tests.utils import ClientHelper, TestConf, ConversationHelper
 
 
@@ -59,7 +53,7 @@ class TestFulfill(unittest.TestCase):
 
     def test_fulfill(self):
         control_msg_0 = self.conversation_helper.login_bot()
-        control_msg_0.click(text=toplevel_buttons[MAKE_WISH])
+        control_msg_0.click(text=src.constants.toplevel_buttons[src.constants.MAKE_WISH])
         wish_txt = "Some wish text"
         self.conversation_helper.send_message(wish_txt)
         time.sleep(1)
@@ -67,7 +61,7 @@ class TestFulfill(unittest.TestCase):
 
         self.conversation_helper.switch_client()
         control_msg_1 = self.conversation_helper.login_bot()
-        control_msg_1.click(text=toplevel_buttons[SELECT_WISH])
+        control_msg_1.click(text=src.constants.toplevel_buttons[src.constants.SELECT_WISH])
         wish_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(wish_msg.text, wish_txt)
         wish_msg.click(text="Взять")
@@ -75,7 +69,7 @@ class TestFulfill(unittest.TestCase):
         phone = self.tg_client_wrapper_0.me.phone
         if not phone.startswith("+"):
             phone = "+" + phone
-        wish_reply_txt = wish_taken.format(
+        wish_reply_txt = src.constants.wish_taken.format(
             wish_text=wish_txt,
             creator_name=self.tg_client_wrapper_0.me.first_name,
             creator_phone=phone,
@@ -84,4 +78,24 @@ class TestFulfill(unittest.TestCase):
 
         self.conversation_helper.switch_client()
         msg = self.conversation_helper.get_unread_messages()
-        self.assertEqual(msg.text, magick_begins)
+        self.assertEqual(msg.text, src.constants.magick_begins)
+
+    def test_wish_limit(self):
+        control_msg_0 = self.conversation_helper.login_bot()
+        for i in range(4):
+            control_msg_0.click(text=src.constants.toplevel_buttons[src.constants.MAKE_WISH])
+            wish_txt = "Some wish text" + str(i)
+            self.conversation_helper.send_message(wish_txt)
+            time.sleep(1)
+        self.conversation_helper.mark_read()
+
+        self.conversation_helper.switch_client()
+        control_msg_1 = self.conversation_helper.login_bot()
+        for _ in range(3):
+            control_msg_1.click(text=src.constants.toplevel_buttons[src.constants.SELECT_WISH])
+            time.sleep(2)
+            wish_msg = self.conversation_helper.get_unread_messages()[0]
+            wish_msg.click(text="Взять")
+        control_msg_1.click(text=src.constants.toplevel_buttons[src.constants.SELECT_WISH])
+        wish_exceeded_msg = self.conversation_helper.get_unread_messages()
+        self.assertEqual(wish_exceeded_msg.text, src.constants.wish_limit_str)

@@ -42,6 +42,8 @@ no_self_created_wishes = "Вы ещё не загадали ни одного ж
 
 lock_and_load = "Слушаюсь и повинуюсь"
 
+wish_limit_str = "Нельзя взять больше трёх желаний одновременно"
+
 wish_taken = (
     "\N{Genie}Поздравляю, теперь вы джинн😉\nЖелание:\n{wish_text}\n\n"
     "Ваш Алладин:\n{creator_name} \N{em dash} {creator_phone}"
@@ -65,3 +67,5 @@ WAITING_FOR_PROOF = 9
 ARTHUR_ALL_WISHES = 10
 
 admin_buttons = {ARTHUR_ALL_WISHES: "Админ: список всех желаний"}
+
+WISHES_TO_SHOW_LIMIT = 5
