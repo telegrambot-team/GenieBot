@@ -5,7 +5,6 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
-from src.config import get_config
 from src.constants import (
     start_msg,
     request_contact_text,

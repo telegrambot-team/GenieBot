@@ -14,7 +14,7 @@ from src.constants import (
     no_self_created_wishes,
     toplevel_buttons,
     MY_WISHES,
-    MAKE_WISH,
+    MAKE_WISH, delete_wish_btn_txt,
 )
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
@@ -100,7 +100,9 @@ class TestCrudWishes(unittest.TestCase):
         control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, wish_txt_0)
-        # TODO: add check for inline button
+        self.assertEqual(len(new_msg.buttons), 1)
+        self.assertEqual(len(new_msg.buttons[0]), 1)
+        self.assertEqual(new_msg.buttons[0][0].text, delete_wish_btn_txt)
 
         # добавляем второе
         control_msg.click(text=toplevel_buttons[MAKE_WISH])

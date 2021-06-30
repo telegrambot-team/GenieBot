@@ -25,6 +25,7 @@ toplevel_buttons = {
 }
 
 cancel_wish_making = "Отмена"
+cancel_wish_taking = "Отмена"
 
 request_contact_text = "Отправить контакт\N{Mobile Phone}"
 
@@ -41,6 +42,8 @@ no_self_wishes = "Вы ещё не выполнили ни одного жела
 no_self_created_wishes = "Вы ещё не загадали ни одного желания"
 
 lock_and_load = "Слушаюсь и повинуюсь"
+
+delete_wish_btn_txt = "Удалить"
 
 wish_limit_str = "Нельзя взять больше трёх желаний одновременно"
 

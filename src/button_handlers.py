@@ -1,4 +1,5 @@
 import itertools
+import math
 
 from telegram import (
     Update,
@@ -39,7 +40,9 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
     ctx.user_data["wishes"]["created"].append(wish_id)
 
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
-    update.message.reply_text(constants.lock_and_load, reply_markup=get_toplevel_markup(is_arthur))
+    update.message.reply_text(
+        constants.lock_and_load, reply_markup=get_toplevel_markup(is_arthur)
+    )
     return ConversationHandler.END
 
 
@@ -55,7 +58,7 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
         if wish["status"] == constants.WAITING:
             kbd = InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    "Удалить",
+                    constants.delete_wish_btn_txt,
                     callback_data=f"{constants.drop_wish_inline_btn} {wish_id}",
                 )
             )
@@ -108,11 +111,10 @@ def select_wish(update: Update, ctx: CallbackContext):
 
     counter = 0
 
-    if 'start_idx' not in ctx.user_data:
-        ctx.user_data['start_idx'] = 0
-    start_idx = ctx.user_data['start_idx']
+    if "start_idx" not in ctx.user_data:
+        ctx.user_data["start_idx"] = 0
+    start_idx = ctx.user_data["start_idx"]
     end_idx = start_idx + constants.WISHES_TO_SHOW_LIMIT
-    enable_paging = len(ctx.bot_data.wishes) > constants.WISHES_TO_SHOW_LIMIT
 
     reversed_wishes = reversed(ctx.bot_data.wishes.values())
 
@@ -121,20 +123,41 @@ def select_wish(update: Update, ctx: CallbackContext):
             return False
         return True
 
-    filtered_wishes = filter(wish_filter, reversed_wishes)
-    wishes_slice = itertools.islice(filtered_wishes, start_idx, end_idx)
+    filtered_wishes = list(filter(wish_filter, reversed_wishes))
+    wishes_slice = list(itertools.islice(filtered_wishes, start_idx, end_idx))
+    enable_paging = len(filtered_wishes) > constants.WISHES_TO_SHOW_LIMIT
+    ctx.user_data["len_filtered_wishes"] = len(filtered_wishes)
+    group_count = math.ceil(len(filtered_wishes)/constants.WISHES_TO_SHOW_LIMIT)
+    page_number = start_idx//constants.WISHES_TO_SHOW_LIMIT + 1
     for idx, wish in enumerate(wishes_slice):
-        btn_multilist = [[InlineKeyboardButton(
-                "Взять",
-                callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}",
-            )]]
-        last_wish = is_last_wish(idx, start_idx, len(ctx.bot_data.wishes), constants.WISHES_TO_SHOW_LIMIT)
+        btn_multilist = [
+            [
+                InlineKeyboardButton(
+                    "Взять",
+                    callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}",
+                )
+            ]
+        ]
+        last_wish = is_last_wish(
+            idx, start_idx, len(filtered_wishes), constants.WISHES_TO_SHOW_LIMIT
+        )
         if enable_paging and last_wish:
-            btn_multilist.append([InlineKeyboardButton("\N{LEFTWARDS BLACK ARROW}",
-                                                       callback_data=f"{constants.take_wish_inline_btn} left"),
-                                  InlineKeyboardButton("\N{BLACK RIGHTWARDS ARROW}",
-                                                       callback_data=f"{constants.take_wish_inline_btn} right")
-                                  ])
+            btn_multilist.append(
+                [
+                    InlineKeyboardButton(
+                        "\N{LEFTWARDS BLACK ARROW}",
+                        callback_data=f"{constants.take_wish_inline_btn} left",
+                    ),
+                    InlineKeyboardButton(
+                        f"{page_number} из {group_count}",
+                        callback_data="ignore"
+                    ),
+                    InlineKeyboardButton(
+                        "\N{BLACK RIGHTWARDS ARROW}",
+                        callback_data=f"{constants.take_wish_inline_btn} right",
+                    ),
+                ]
+            )
         kbd = InlineKeyboardMarkup(btn_multilist)
         msg = ctx.bot.send_message(
             chat_id, wish["text"], reply_markup=kbd, disable_notification=True
@@ -150,20 +173,21 @@ def select_wish(update: Update, ctx: CallbackContext):
 def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
+    wish_data = update.callback_query.data.split(" ")[1]
+    if wish_data == "right":
+        new_idx = ctx.user_data["start_idx"] + constants.WISHES_TO_SHOW_LIMIT
+    elif wish_data == "left":
+        new_idx = ctx.user_data["start_idx"] - constants.WISHES_TO_SHOW_LIMIT
+    else:
+        raise RuntimeError("Unexpected command")
+    if new_idx < 0 or ctx.user_data["len_filtered_wishes"] <= new_idx:
+        return
+    ctx.user_data["start_idx"] = new_idx
+
     for msg_id in ctx.user_data["select_wish_msg_id"]:
         ctx.bot.delete_message(chat_id, msg_id)
 
-    wish_data = update.callback_query.data.split(" ")[1]
-    if wish_data == 'right':
-        new_idx = ctx.user_data['start_idx'] + constants.WISHES_TO_SHOW_LIMIT
-    elif wish_data == 'left':
-        new_idx = ctx.user_data['start_idx'] - constants.WISHES_TO_SHOW_LIMIT
-    else:
-        raise RuntimeError("Unexpected command")
-    # TODO filtered wish count
-    if 0 <= new_idx < len(ctx.bot_data.wishes):
-        ctx.user_data['start_idx'] = new_idx
-    return select_wish(update, ctx)
+    select_wish(update, ctx)
 
 
 @log
@@ -174,7 +198,7 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
 
     for msg_id in ctx.user_data["select_wish_msg_id"]:
         ctx.bot.delete_message(chat_id, msg_id)
-    del ctx.user_data['start_idx']
+    del ctx.user_data["start_idx"]
     del ctx.user_data["select_wish_msg_id"]
 
     wish = ctx.bot_data.wishes[str(wish_id)]
@@ -246,6 +270,7 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
         chat_id,
         "\N{Genie}Жду подтверждение выполненного желания.\n"
         "Отправь фото или видео\N{Winking Face}",
+        reply_markup=get_cancel_markup()
     )
     ctx.user_data["wish_waiting_for_proof"] = wish_id
 
@@ -254,6 +279,9 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
 
 @log
 def proof_handler(update: Update, ctx: CallbackContext):
+    if update.message.text and update.message.text == constants.cancel_wish_taking:
+        main_handler(update, ctx)
+        return ConversationHandler.END
     if not update.message.photo and not update.message.video:
         update.message.reply_text("Отправьте фото или видео")
         return constants.WAITING_FOR_PROOF
@@ -263,7 +291,8 @@ def proof_handler(update: Update, ctx: CallbackContext):
     wish["proof_msg_id"] = update.message.message_id
     ctx.user_data["wishes"]["done"].append(wish_id)
     ctx.user_data["wishes"]["in_progress"].remove(wish_id)
-    update.message.reply_text("Желание исполнено👍")
+    is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
+    update.message.reply_text("Желание исполнено👍", reply_markup=get_toplevel_markup(is_arthur))
 
     creator_id = wish["creator_id"]
     ctx.bot.forward_message(creator_id, wish["fulfiller_id"], wish["proof_msg_id"])
@@ -308,15 +337,12 @@ def button_handler(update: Update, ctx: CallbackContext):
         select_wish(update, ctx)
         return ConversationHandler.END
     elif text == constants.toplevel_buttons[constants.FULFILLED_LIST]:
-        # TODO: add pagination
         list_fulfilled(update, ctx)
         return ConversationHandler.END
     elif text == constants.toplevel_buttons[constants.WISHES_IN_PROGRESS]:
-        # TODO: add pagination
         list_in_progress(update, ctx)
         return ConversationHandler.END
     elif text == constants.toplevel_buttons[constants.MY_WISHES]:
-        # TODO: add pagination
         list_my_wishes(update, ctx)
         return ConversationHandler.END
     elif (

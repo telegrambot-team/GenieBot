@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os
 import time
@@ -8,6 +9,23 @@ from dotenv import load_dotenv
 from src.button_handlers import is_last_wish
 from src.constants import toplevel_buttons, MAKE_WISH, SELECT_WISH, WISHES_TO_SHOW_LIMIT
 from tests.utils import ClientHelper, TestConf, ConversationHelper
+
+
+def group_by(iterable, total_count):
+    group_num = 0
+    local_count = 0
+
+    def key_fn(_):
+        nonlocal group_num
+        nonlocal local_count
+        if local_count == total_count:
+            group_num += 1
+            local_count = 0
+        local_count += 1
+        return group_num
+
+    for k, g in itertools.groupby(iterable, key=key_fn):
+        yield g
 
 
 # noinspection PyPep8Naming
@@ -68,10 +86,24 @@ class TestFulfill(unittest.TestCase):
         control_msg_1 = self.conversation_helper.login_bot()
         control_msg_1.click(text=toplevel_buttons[SELECT_WISH])
         time.sleep(5)
-        wishes_msg = self.conversation_helper.get_unread_messages()
-        self.assertListEqual(
-            wish_list, list(map(lambda x: x.text, wishes_msg))
-        )
+        wishes_msg_1_page = self.conversation_helper.get_unread_messages()
+        wish_groups = [
+            list(reversed(list(grp)))
+            for grp in group_by(reversed(wish_list), WISHES_TO_SHOW_LIMIT)
+        ]
+        self.assertListEqual(wish_groups[0], list(map(lambda x: x.text, wishes_msg_1_page)))
+        wishes_msg_1_page[0].click(i=1, j=2)
+        time.sleep(5)
+        wishes_msg_2_page = self.conversation_helper.get_unread_messages()
+        self.assertListEqual(wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page)))
+        wishes_msg_2_page[0].click(i=1, j=2)
+        time.sleep(5)
+        wishes_msg_3_page = self.conversation_helper.get_unread_messages()
+        self.assertListEqual(wish_groups[2], list(map(lambda x: x.text, [wishes_msg_3_page])))
+        wishes_msg_3_page.click(i=1, j=0)
+        time.sleep(5)
+        wishes_msg_2_page_new = self.conversation_helper.get_unread_messages()
+        self.assertListEqual(wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page_new)))
 
     def test_is_last_wish(self):
         self.assertTrue(is_last_wish(0, 5, 6, WISHES_TO_SHOW_LIMIT))
