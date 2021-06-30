@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Optional
 
 config_instance = None
 
@@ -30,7 +30,7 @@ class Config:
 @dataclass
 class BotData:
     wishes = dict[str, dict]()
-    config: Config = None
+    config: Optional[Config] = None
 
 
 def get_config():
