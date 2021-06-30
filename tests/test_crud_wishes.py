@@ -14,7 +14,8 @@ from src.constants import (
     no_self_created_wishes,
     toplevel_buttons,
     MY_WISHES,
-    MAKE_WISH, delete_wish_btn_txt,
+    MAKE_WISH,
+    delete_wish_btn_txt,
 )
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 

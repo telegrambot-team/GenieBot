@@ -91,19 +91,27 @@ class TestFulfill(unittest.TestCase):
             list(reversed(list(grp)))
             for grp in group_by(reversed(wish_list), WISHES_TO_SHOW_LIMIT)
         ]
-        self.assertListEqual(wish_groups[0], list(map(lambda x: x.text, wishes_msg_1_page)))
+        self.assertListEqual(
+            wish_groups[0], list(map(lambda x: x.text, wishes_msg_1_page))
+        )
         wishes_msg_1_page[0].click(i=1, j=2)
         time.sleep(5)
         wishes_msg_2_page = self.conversation_helper.get_unread_messages()
-        self.assertListEqual(wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page)))
+        self.assertListEqual(
+            wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page))
+        )
         wishes_msg_2_page[0].click(i=1, j=2)
         time.sleep(5)
         wishes_msg_3_page = self.conversation_helper.get_unread_messages()
-        self.assertListEqual(wish_groups[2], list(map(lambda x: x.text, [wishes_msg_3_page])))
+        self.assertListEqual(
+            wish_groups[2], list(map(lambda x: x.text, [wishes_msg_3_page]))
+        )
         wishes_msg_3_page.click(i=1, j=0)
         time.sleep(5)
         wishes_msg_2_page_new = self.conversation_helper.get_unread_messages()
-        self.assertListEqual(wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page_new)))
+        self.assertListEqual(
+            wish_groups[1], list(map(lambda x: x.text, wishes_msg_2_page_new))
+        )
 
     def test_is_last_wish(self):
         self.assertTrue(is_last_wish(0, 5, 6, WISHES_TO_SHOW_LIMIT))

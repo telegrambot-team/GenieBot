@@ -127,8 +127,8 @@ def select_wish(update: Update, ctx: CallbackContext):
     wishes_slice = list(itertools.islice(filtered_wishes, start_idx, end_idx))
     enable_paging = len(filtered_wishes) > constants.WISHES_TO_SHOW_LIMIT
     ctx.user_data["len_filtered_wishes"] = len(filtered_wishes)
-    group_count = math.ceil(len(filtered_wishes)/constants.WISHES_TO_SHOW_LIMIT)
-    page_number = start_idx//constants.WISHES_TO_SHOW_LIMIT + 1
+    group_count = math.ceil(len(filtered_wishes) / constants.WISHES_TO_SHOW_LIMIT)
+    page_number = start_idx // constants.WISHES_TO_SHOW_LIMIT + 1
     for idx, wish in enumerate(wishes_slice):
         btn_multilist = [
             [
@@ -149,8 +149,7 @@ def select_wish(update: Update, ctx: CallbackContext):
                         callback_data=f"{constants.take_wish_inline_btn} left",
                     ),
                     InlineKeyboardButton(
-                        f"{page_number} из {group_count}",
-                        callback_data="ignore"
+                        f"{page_number} из {group_count}", callback_data="ignore"
                     ),
                     InlineKeyboardButton(
                         "\N{BLACK RIGHTWARDS ARROW}",
@@ -270,7 +269,7 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
         chat_id,
         "\N{Genie}Жду подтверждение выполненного желания.\n"
         "Отправь фото или видео\N{Winking Face}",
-        reply_markup=get_cancel_markup()
+        reply_markup=get_cancel_markup(),
     )
     ctx.user_data["wish_waiting_for_proof"] = wish_id
 
@@ -292,7 +291,9 @@ def proof_handler(update: Update, ctx: CallbackContext):
     ctx.user_data["wishes"]["done"].append(wish_id)
     ctx.user_data["wishes"]["in_progress"].remove(wish_id)
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
-    update.message.reply_text("Желание исполнено👍", reply_markup=get_toplevel_markup(is_arthur))
+    update.message.reply_text(
+        "Желание исполнено👍", reply_markup=get_toplevel_markup(is_arthur)
+    )
 
     creator_id = wish["creator_id"]
     ctx.bot.forward_message(creator_id, wish["fulfiller_id"], wish["proof_msg_id"])
