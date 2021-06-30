@@ -50,7 +50,7 @@ def main():
     updater.start_polling()
 
     if conf.pinger_enabled:
-        from bot_pinger import run_pinger
+        from src.bot_pinger import run_pinger
 
         asyncio.run(run_pinger(conf))
     else:
