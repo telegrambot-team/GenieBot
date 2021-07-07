@@ -110,8 +110,8 @@ class DBPersistence(BasePersistence):
         return deepcopy(self.user_data)
 
     def update_user_data(self, user_id, data):
-        if self.user_data[user_id] == data:
-            return
+        # if self.user_data[user_id] == data:
+        #     return
         logging.info(f"Updating {user_id} with {data}")
         self.user_data[user_id] = data
         with session_scope(self.Session) as session:
@@ -135,17 +135,18 @@ class DBPersistence(BasePersistence):
         return deepcopy(self.bot_data)
 
     def update_chat_data(self, chat_id, data):
-        if self.chat_data[chat_id] == data:
-            return
+        # if self.chat_data[chat_id] == data:
+        #     return
         logging.info(f"Updating {chat_id} with {data}")
         self.chat_data[chat_id] = data
         with session_scope(self.Session) as session:
             session.merge(ChatData(id=chat_id, data=data))  # noqa
 
     def update_bot_data(self, data):
-        if self.bot_data == data:
-            return
+        # TODO: fix check for new data
+        # if self.bot_data == data:
+        #     return
         logging.info(f"Updating bot_data with {data}")
         self.bot_data = data
         with session_scope(self.Session) as session:
-            session.merge(BotData(id=0, data=asdict(self.bot_data)))  # noqa
+            session.merge(BotData(id=0, data=asdict(data)))  # noqa

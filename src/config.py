@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import os
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ class Config:
 
 @dataclass
 class BotData:
-    wishes = dict[str, dict]()
+    wishes: dict[str, dict] = dataclasses.field(default_factory=dict)
     config: Optional[Config] = None
 
 
