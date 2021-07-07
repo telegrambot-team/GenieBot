@@ -37,15 +37,15 @@ class Document:
 
 
 class UserData(Base, Document):
-    __tablename__ = "user"
+    __tablename__ = "user_persdata"
 
 
 class ChatData(Base, Document):
-    __tablename__ = "chat"
+    __tablename__ = "chat_persdata"
 
 
 class BotData(Base, Document):
-    __tablename__ = "bot"
+    __tablename__ = "bot_persdata"
 
 
 class ConversationData(Base, Document):
