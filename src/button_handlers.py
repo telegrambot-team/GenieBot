@@ -101,18 +101,9 @@ def is_last_wish(idx, slice_start_idx, total_len, wish_group_limit):
     return slice_start_idx + idx + 1 == total_len or idx + 1 == wish_group_limit
 
 
-@log
-def select_wish(update: Update, ctx: CallbackContext):
-    chat_id = update.effective_chat.id
-    if len(ctx.user_data["wishes"]["in_progress"]) >= 3:
-        ctx.bot.send_message(chat_id, src.constants.wish_limit_str)
-        return
-    ctx.user_data["select_wish_msg_id"] = []
-
+def render_wishes(update: Update, ctx: CallbackContext):
     counter = 0
-
-    if "start_idx" not in ctx.user_data:
-        ctx.user_data["start_idx"] = 0
+    chat_id = update.effective_chat.id
     start_idx = ctx.user_data["start_idx"]
     end_idx = start_idx + constants.WISHES_TO_SHOW_LIMIT
 
@@ -169,6 +160,18 @@ def select_wish(update: Update, ctx: CallbackContext):
 
 
 @log
+def select_wish(update: Update, ctx: CallbackContext):
+    chat_id = update.effective_chat.id
+    if len(ctx.user_data["wishes"]["in_progress"]) >= 3:
+        ctx.bot.send_message(chat_id, src.constants.wish_limit_str)
+        return
+    ctx.user_data["select_wish_msg_id"] = []
+
+    ctx.user_data["start_idx"] = 0
+    render_wishes(update, ctx)
+
+
+@log
 def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
@@ -186,7 +189,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
     for msg_id in ctx.user_data["select_wish_msg_id"]:
         ctx.bot.delete_message(chat_id, msg_id)
 
-    select_wish(update, ctx)
+    render_wishes(update, ctx)
 
 
 @log
@@ -347,8 +350,8 @@ def button_handler(update: Update, ctx: CallbackContext):
         list_my_wishes(update, ctx)
         return ConversationHandler.END
     elif (
-        text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]
-        and update.effective_user.id == ctx.bot_data.config.arthur_id
+            text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]
+            and update.effective_user.id == ctx.bot_data.config.arthur_id
     ):
         admin_list_all_wishes(update, ctx)
         return ConversationHandler.END

@@ -19,6 +19,9 @@ def setUpModule():
         "%(message)s",
     )
 
+    if not os.path.exists("tests/test_data/.testenv"):
+        raise RuntimeError(".testenv not found")
+
     load_dotenv("tests/test_data/.testenv")
 
 

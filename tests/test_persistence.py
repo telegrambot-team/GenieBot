@@ -15,11 +15,14 @@ def setUpModule():
     logging.basicConfig(
         level=logging.INFO,
         format="%(filename)s: "
-        "%(levelname)s: "
-        "%(funcName)s(): "
-        "%(lineno)d:\t"
-        "%(message)s",
+               "%(levelname)s: "
+               "%(funcName)s(): "
+               "%(lineno)d:\t"
+               "%(message)s",
     )
+
+    if not os.path.exists("tests/test_data/.testenv"):
+        raise RuntimeError(".testenv not found")
 
     load_dotenv("tests/test_data/.testenv")
 
