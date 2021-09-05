@@ -1,4 +1,5 @@
 import itertools
+import logging
 import math
 
 from telegram import (
@@ -168,6 +169,7 @@ def select_wish(update: Update, ctx: CallbackContext):
     ctx.user_data["select_wish_msg_id"] = []
 
     ctx.user_data["start_idx"] = 0
+    ctx.user_data['selecting_wish'] = 1
     render_wishes(update, ctx)
 
 
@@ -194,6 +196,9 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
 
 @log
 def take_wish_handler(update: Update, ctx: CallbackContext):
+    if ctx.user_data['selecting_wish'] == 0:
+        logging.info(f"Ignoring duplicate call of take_wish_handler with user_data={ctx.user_data}")
+        return
     wish_data = update.callback_query.data.split(" ")[1]
     wish_id = int(wish_data)
     chat_id = update.effective_chat.id
@@ -217,6 +222,8 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     )
     ctx.bot.send_message(chat_id, text)
     ctx.bot.send_message(wish["creator_id"], constants.magick_begins)
+
+    ctx.user_data['selecting_wish'] = 0
 
 
 @log
