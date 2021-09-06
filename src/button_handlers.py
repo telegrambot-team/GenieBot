@@ -106,6 +106,7 @@ def render_wishes(update: Update, ctx: CallbackContext):
     counter = 0
     chat_id = update.effective_chat.id
     start_idx = ctx.user_data["start_idx"]
+    ctx.user_data["select_wish_msg_id"] = []
     end_idx = start_idx + constants.WISHES_TO_SHOW_LIMIT
 
     reversed_wishes = reversed(ctx.bot_data.wishes.values())
@@ -166,7 +167,6 @@ def select_wish(update: Update, ctx: CallbackContext):
     if len(ctx.user_data["wishes"]["in_progress"]) >= 3:
         ctx.bot.send_message(chat_id, src.constants.wish_limit_str)
         return
-    ctx.user_data["select_wish_msg_id"] = []
 
     ctx.user_data["start_idx"] = 0
     ctx.user_data['selecting_wish'] = 1
