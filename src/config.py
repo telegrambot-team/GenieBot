@@ -43,7 +43,7 @@ def get_config():
     token = os.environ["BOT_TOKEN"]
     database_url = os.environ.get("DATABASE_URL") or ""
     if database_url.startswith("postgres://"):
-        database_url.replace("postgres://", "postgresql://")
+        database_url = database_url.replace("postgres://", "postgresql://")
     admin_ids = list(map(int, os.environ["ADMIN_IDS"].split(";")))
     arthur_id = int(os.environ["ARTHUR_ID"])
     pinger_enabled = True
