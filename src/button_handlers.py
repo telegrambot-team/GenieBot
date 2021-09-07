@@ -177,6 +177,10 @@ def select_wish(update: Update, ctx: CallbackContext):
 def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
+    if ctx.user_data['selecting_wish'] == 0:
+        logging.warning(f"Ignoring duplicate call of control_list_wish_handler with user_data={ctx.user_data}")
+        return
+
     wish_data = update.callback_query.data.split(" ")[1]
     if wish_data == "right":
         new_idx = ctx.user_data["start_idx"] + constants.WISHES_TO_SHOW_LIMIT
@@ -197,7 +201,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
 @log
 def take_wish_handler(update: Update, ctx: CallbackContext):
     if ctx.user_data['selecting_wish'] == 0:
-        logging.info(f"Ignoring duplicate call of take_wish_handler with user_data={ctx.user_data}")
+        logging.warning(f"Ignoring duplicate call of take_wish_handler with user_data={ctx.user_data}")
         return
     wish_data = update.callback_query.data.split(" ")[1]
     wish_id = int(wish_data)
@@ -207,8 +211,12 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
         ctx.bot.delete_message(chat_id, msg_id)
     del ctx.user_data["start_idx"]
     del ctx.user_data["select_wish_msg_id"]
+    ctx.user_data['selecting_wish'] = 0
 
     wish = ctx.bot_data.wishes[str(wish_id)]
+    if wish['status'] != constants.WAITING:
+        ctx.bot.send_message(chat_id, "Это желание уже взяли😅")
+        return
     wish["status"] = constants.IN_PROGRESS
     wish["fulfiller_id"] = chat_id
 
@@ -222,8 +230,6 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     )
     ctx.bot.send_message(chat_id, text)
     ctx.bot.send_message(wish["creator_id"], constants.magick_begins)
-
-    ctx.user_data['selecting_wish'] = 0
 
 
 @log

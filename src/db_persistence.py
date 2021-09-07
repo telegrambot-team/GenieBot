@@ -150,3 +150,10 @@ class DBPersistence(BasePersistence):
         self.bot_data = data
         with session_scope(self.Session) as session:
             session.merge(BotData(id=0, data=asdict(data)))  # noqa
+
+
+if __name__ == '__main__':
+    pers = DBPersistence('postgresql://')
+    ch = pers.user_data[267932259]
+    del ch['wishes']['in_progress'][2]
+    pers.update_user_data(267932259, ch)
