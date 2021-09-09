@@ -122,7 +122,10 @@ def contact_handler(update: Update, ctx: CallbackContext):
     phone = contact.phone_number
     if phone[0] != "+":
         phone = f"+{phone}"
-    ctx.user_data["contact"] = (contact.first_name, phone)
+    name = contact.first_name
+    if update.effective_user.username:
+        name += " @" + update.effective_user.username
+    ctx.user_data["contact"] = (name, phone)
     if "wishes" not in ctx.user_data:
         ctx.user_data["wishes"] = {"created": [], "in_progress": [], "done": []}
     main_handler(update, ctx)
