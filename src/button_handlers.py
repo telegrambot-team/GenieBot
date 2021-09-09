@@ -10,6 +10,7 @@ from telegram import (
 )
 from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
+from telegram.error import BadRequest
 
 import src.constants
 from src.base_handlers import start_handler, main_handler, get_toplevel_markup
@@ -192,8 +193,13 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
         return
     ctx.user_data["start_idx"] = new_idx
 
-    for msg_id in ctx.user_data["select_wish_msg_id"]:
-        ctx.bot.delete_message(chat_id, msg_id)
+    try:
+        for msg_id in ctx.user_data["select_wish_msg_id"]:
+            ctx.bot.delete_message(chat_id, msg_id)
+    except BadRequest as e:
+        if e.message != "Message can't be deleted for everyone":
+            raise
+        logging.warning(e)
 
     render_wishes(update, ctx)
 
