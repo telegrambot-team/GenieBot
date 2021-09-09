@@ -60,5 +60,6 @@ def main():
     logging.info("Application shut down")
 
 
+# TODO: logging every handler triggered by user
 if __name__ == "__main__":
     main()
