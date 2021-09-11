@@ -193,13 +193,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
         return
     ctx.user_data["start_idx"] = new_idx
 
-    try:
-        for msg_id in ctx.user_data["select_wish_msg_id"]:
-            ctx.bot.delete_message(chat_id, msg_id)
-    except BadRequest as e:
-        if e.message != "Message can't be deleted for everyone":
-            raise
-        logging.warning(e)
+    safe_delete_msg_list(ctx.user_data["select_wish_msg_id"], chat_id, ctx.bot)
 
     render_wishes(update, ctx)
 
@@ -213,8 +207,8 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     wish_id = int(wish_data)
     chat_id = update.effective_chat.id
 
-    for msg_id in ctx.user_data["select_wish_msg_id"]:
-        ctx.bot.delete_message(chat_id, msg_id)
+    safe_delete_msg_list(ctx.user_data["select_wish_msg_id"], chat_id, ctx.bot)
+
     del ctx.user_data["start_idx"]
     del ctx.user_data["select_wish_msg_id"]
     ctx.user_data['selecting_wish'] = 0
@@ -279,13 +273,23 @@ def list_in_progress(update: Update, ctx: CallbackContext):
         ctx.user_data["fulfill_wish_msg_id"].append(msg.message_id)
 
 
+def safe_delete_msg_list(msg_ids, chat_id, bot):
+    try:
+        for msg_id in msg_ids:
+            bot.delete_message(chat_id, msg_id)
+    except BadRequest as e:
+        if e.message != "Message can't be deleted for everyone":
+            raise
+
+        logging.warning(e)
+
+
 @log
 def fulfill_wish_handler(update: Update, ctx: CallbackContext):
     wish_id = int(update.callback_query.data.split(" ")[1])
     chat_id = update.effective_chat.id
 
-    for msg_id in ctx.user_data["fulfill_wish_msg_id"]:
-        ctx.bot.delete_message(chat_id, msg_id)
+    safe_delete_msg_list(ctx.user_data["fulfill_wish_msg_id"], chat_id, ctx.bot)
 
     ctx.bot.send_message(
         chat_id,
