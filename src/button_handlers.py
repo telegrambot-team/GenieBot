@@ -1,6 +1,7 @@
 import itertools
 import logging
 import math
+from collections import Counter
 
 from telegram import (
     Update,
@@ -349,6 +350,33 @@ def get_cancel_markup():
     return ReplyKeyboardMarkup(xs, resize_keyboard=True)
 
 
+def admin_list_statistics(update: Update, ctx: CallbackContext):
+    fulfilled_wishes = list(filter(lambda w: w['status'] == constants.DONE, ctx.bot_data.wishes.values()))
+
+    top_creators = Counter([w['creator_id'] for w in fulfilled_wishes])
+    top_fulfillers = Counter([w['fulfiller_id'] for w in fulfilled_wishes])
+
+    update.message.reply_text(f"Людей в боте: {len(ctx.dispatcher.user_data)}\n"
+                              f"Желаний загадано: {len(ctx.bot_data.wishes)}\n"
+                              f"Желаний исполнено: {len(fulfilled_wishes)}")
+
+    best_creators_msg = "Чьи желания были самыми выполняемыми:\n"
+    for telegram_id, wish_count in top_creators.most_common(3):
+        assert telegram_id in ctx.dispatcher.user_data
+        contact = ctx.dispatcher.user_data[telegram_id]["contact"]
+        best_creators_msg += f"{contact} — {wish_count}\n"
+
+    update.message.reply_text(best_creators_msg)
+
+    best_fulfillers_msg = "Кто больше всех выполнял:\n"
+    for telegram_id, wish_count in top_fulfillers.most_common(3):
+        assert telegram_id in ctx.dispatcher.user_data
+        contact = ctx.dispatcher.user_data[telegram_id]["contact"]
+        best_fulfillers_msg += f"{contact} — {wish_count}\n"
+
+    update.message.reply_text(best_fulfillers_msg)
+
+
 @log
 def button_handler(update: Update, ctx: CallbackContext):
     if "contact" not in ctx.user_data:
@@ -372,9 +400,12 @@ def button_handler(update: Update, ctx: CallbackContext):
     elif text == constants.toplevel_buttons[constants.MY_WISHES]:
         list_my_wishes(update, ctx)
         return ConversationHandler.END
-    elif (
-            text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]
-            and update.effective_user.id == ctx.bot_data.config.arthur_id
-    ):
+    elif text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]:
+        assert update.effective_user.id == ctx.bot_data.config.arthur_id
         admin_list_all_wishes(update, ctx)
+        return ConversationHandler.END
+
+    elif text == constants.admin_buttons[constants.ARTHUR_STATISTICS]:
+        assert update.effective_user.id == ctx.bot_data.config.arthur_id
+        admin_list_statistics(update, ctx)
         return ConversationHandler.END

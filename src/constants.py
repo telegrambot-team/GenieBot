@@ -69,6 +69,9 @@ WAITING_FOR_PROOF = 9
 
 ARTHUR_ALL_WISHES = 10
 
-admin_buttons = {ARTHUR_ALL_WISHES: "Админ: список всех желаний"}
+ARTHUR_STATISTICS = 11
+
+admin_buttons = {ARTHUR_ALL_WISHES: "Админ: список всех желаний",
+                 ARTHUR_STATISTICS: "Админ: статистика"}
 
 WISHES_TO_SHOW_LIMIT = 5

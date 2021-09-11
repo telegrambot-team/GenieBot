@@ -18,7 +18,7 @@ from src.constants import (
     FULFILLED_LIST,
     SELECT_WISH,
     MAKE_WISH,
-    REMOVED,
+    REMOVED, ARTHUR_STATISTICS,
 )
 
 
@@ -69,6 +69,7 @@ def get_toplevel_markup(is_arthur):
     ]
     if is_arthur:
         xs.append([admin_buttons[ARTHUR_ALL_WISHES]])
+        xs.append([admin_buttons[ARTHUR_STATISTICS]])
     return ReplyKeyboardMarkup(xs, resize_keyboard=True)
 
 
