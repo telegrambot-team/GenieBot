@@ -41,10 +41,10 @@ def greet_chat_members(update: Update, ctx: CallbackContext) -> None:
     member_name = update.chat_member.new_chat_member.user.mention_html()
 
     if not was_member and is_member:
-        ctx.bot.send_message(239811963, f"{member_name} was added by {cause_name}",
+        ctx.bot.send_message(-930942045, f"{member_name} was added by {cause_name}",
                              parse_mode=ParseMode.HTML)
     elif was_member and not is_member:
-        ctx.bot.send_message(239811963,
+        ctx.bot.send_message(-930942045,
                              f"{member_name} is no longer with us. Kicked by: {cause_name} ...",
                              parse_mode=ParseMode.HTML,
                              )
