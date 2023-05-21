@@ -2,6 +2,7 @@ import logging
 import asyncio
 import sys
 
+from telegram import Update
 from telegram.ext.contexttypes import ContextTypes
 
 from src.handlers_setup import setup_handlers
@@ -47,14 +48,10 @@ def main():
     logging.info("Application started")
     conf = get_config()
     updater = create_bot(conf)
-    updater.start_polling()
+    updater.start_polling(allowed_updates=Update.ALL_TYPES)
 
-    if conf.pinger_enabled:
-        from src.bot_pinger import run_pinger
+    updater.idle()
 
-        asyncio.run(run_pinger(conf))
-    else:
-        updater.idle()
     if updater.running:
         updater.stop()
     logging.info("Application shut down")

@@ -15,7 +15,7 @@ from src.constants import (
     toplevel_buttons,
     MY_WISHES,
     MAKE_WISH,
-    delete_wish_btn_txt,
+    delete_wish_btn_txt, default_handler_text,
 )
 from tests.utils import ClientHelper, TestConf, ConversationHelper, check_intro_markup
 
@@ -35,8 +35,8 @@ def setUpModule():
 
 
 def check_start_msg(self, msg):
-    self.assertEqual(msg.text, start_msg)
-    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text, request_contact_text)
+    self.assertEqual(msg.text, intro_msg)
+    # self.assertEqual(msg.reply_markup.rows[0].buttons[0].text, request_contact_text)
 
 
 def check_intro_msg(self, msg):
@@ -75,14 +75,19 @@ class TestCrudWishes(unittest.TestCase):
 
         self.conversation_helper.send_message("23525")
         msg = self.conversation_helper.get_unread_messages()
-        check_start_msg(self, msg)
+        # check_start_msg(self, msg)
+        self.assertEqual(msg.text, default_handler_text)
 
-        msg = self.conversation_helper.login_bot()
-        check_intro_msg(self, msg)
+        # msg = self.conversation_helper.login_bot()
+        # check_intro_msg(self, msg)
+        self.assertEqual(msg.text, default_handler_text)
+
         check_intro_markup(self, msg)
 
     def test_crud(self):
-        control_msg = self.conversation_helper.login_bot()
+        # control_msg = self.conversation_helper.login_bot()
+        self.conversation_helper.send_message("/start")
+        control_msg = self.conversation_helper.get_unread_messages()
         control_msg.click(text=toplevel_buttons[MY_WISHES])
         new_msg = self.conversation_helper.get_unread_messages()
         self.assertEqual(new_msg.text, no_self_created_wishes)

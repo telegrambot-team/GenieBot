@@ -70,15 +70,15 @@ class TestFulfill(unittest.TestCase):
         self.assertEqual(wish_msg.text, wish_txt)
         wish_msg.click(text="Взять")
         wish_reply_msg = self.conversation_helper.get_unread_messages()
-        phone = self.tg_client_wrapper_0.me.phone
-        if not phone.startswith("+"):
-            phone = "+" + phone
+        name = self.tg_client_wrapper_0.me.first_name
+        if self.tg_client_wrapper_0.me.username:
+            name += " @" + self.tg_client_wrapper_0.me.username
+
         wish_reply_txt = src.constants.wish_taken.format(
             wish_text=wish_txt,
-            creator_name=self.tg_client_wrapper_0.me.first_name,
-            creator_phone=phone,
+            creator_name=name
         )
-        self.assertEqual(wish_reply_msg.text, wish_reply_txt)
+        self.assertEqual(wish_reply_txt, wish_reply_msg.text)
 
         self.conversation_helper.switch_client()
         msg = self.conversation_helper.get_unread_messages()

@@ -62,13 +62,14 @@ class TestPersistence(unittest.TestCase):
         loader = DBPersistence(self.test_conf.db_url)
         self.assertEqual(len(loader.user_data), 1)
         self.assertIn(self.tg_client_wrapper.me.id, loader.user_data)
-        phone = self.tg_client_wrapper.me.phone
-        if not phone.startswith("+"):
-            phone = "+" + phone
+        name = self.tg_client_wrapper.me.first_name
+        if self.tg_client_wrapper.me.username:
+            name += " @" + self.tg_client_wrapper.me.username
+
         self.assertDictEqual(
             loader.user_data[self.tg_client_wrapper.me.id],
             {
-                "contact": [self.tg_client_wrapper.me.first_name, phone],
+                "contact": [name],
                 "wishes": {"created": [], "in_progress": [], "done": []},
             },
         )

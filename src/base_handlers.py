@@ -37,21 +37,29 @@ def restricted(func, admin_ids: list[int]):
 
 
 @log
-def start_handler(update: Update, _: CallbackContext):
-    update.message.reply_text(
-        start_msg,
-        reply_markup=ReplyKeyboardMarkup(
-            [[KeyboardButton(request_contact_text, request_contact=True)]],
-            resize_keyboard=True,
-        ),
-    )
+def start_handler(update: Update, ctx: CallbackContext):
+    # update.message.reply_text(
+    #     start_msg,
+    #     reply_markup=ReplyKeyboardMarkup(
+    #         [[KeyboardButton(request_contact_text, request_contact=True)]],
+    #         resize_keyboard=True,
+    #     ),
+    # )
+    user = update.message.from_user
+    if not user.username:
+        update.message.reply_text("Для работы бота необходимо задать юзернейм. "
+                                  "Он будет использоваться для связи между тобой и исполнителем твоего желания.\n"
+                                  "Нажми ещё раз на /start когда добавишь юзернейм!")
+        return
+    if "wishes" not in ctx.user_data:
+        ctx.user_data["wishes"] = {"created": [], "in_progress": [], "done": []}
+    if "contact" not in ctx.user_data:
+        ctx.user_data["contact"] = f"{user.full_name} @{user.username}"
+    main_handler(update, ctx)
 
 
 @log
 def default_handler(update: Update, ctx: CallbackContext):
-    if "contact" not in ctx.user_data:
-        start_handler(update, ctx)
-        return
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
     update.message.reply_text(
         default_handler_text, reply_markup=get_toplevel_markup(is_arthur)
@@ -114,22 +122,6 @@ def ups_handler(update, context):
         f"{type(context.error)=}\n"
         f"msg={context.error}",
     )
-
-
-@log
-def contact_handler(update: Update, ctx: CallbackContext):
-    logging.info(update)
-    contact = update.message.contact
-    phone = contact.phone_number
-    if phone[0] != "+":
-        phone = f"+{phone}"
-    name = contact.first_name
-    if update.effective_user.username:
-        name += " @" + update.effective_user.username
-    ctx.user_data["contact"] = (name, phone)
-    if "wishes" not in ctx.user_data:
-        ctx.user_data["wishes"] = {"created": [], "in_progress": [], "done": []}
-    main_handler(update, ctx)
 
 
 def main_handler(update: Update, ctx: CallbackContext):

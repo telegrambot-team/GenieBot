@@ -3,12 +3,11 @@ from telegram.ext import (
     Filters,
     MessageHandler,
     ConversationHandler,
-    CallbackQueryHandler,
+    CallbackQueryHandler, ChatMemberHandler,
 )
 
 from src.base_handlers import (
     start_handler,
-    contact_handler,
     default_handler,
     ups_handler,
     drop_wish,
@@ -26,6 +25,7 @@ from src.button_handlers import (
     control_list_wish_handler,
 )
 import src.constants as constants
+from src.chat_track_handler import greet_chat_members
 
 
 def setup_handlers(updater, admin_ids: list[int]):
@@ -33,7 +33,6 @@ def setup_handlers(updater, admin_ids: list[int]):
     persist = updater.persistence is not None
     dispatcher.add_handler(CommandHandler("start", start_handler))
     dispatcher.add_handler(CommandHandler("dropwish", restricted(drop_wish, admin_ids)))
-    dispatcher.add_handler(MessageHandler(Filters.contact, contact_handler))
     dispatcher.add_handler(
         ConversationHandler(
             entry_points=[
@@ -95,6 +94,9 @@ def setup_handlers(updater, admin_ids: list[int]):
             per_chat=False,
         )
     )
+
+    dispatcher.add_handler(ChatMemberHandler(greet_chat_members, ChatMemberHandler.CHAT_MEMBER))
+
     dispatcher.add_handler(MessageHandler(Filters.chat_type.private, default_handler))
 
     dispatcher.add_error_handler(ups_handler)

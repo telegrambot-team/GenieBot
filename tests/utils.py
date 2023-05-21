@@ -105,11 +105,11 @@ class ConversationHelper:
             time.sleep(0.1)
         raise TimeoutError("No messages delivered in time")
 
-    def login_bot(self):
-        self.send_message("/start")
-        msg = self.get_unread_messages()
-        msg.click(share_phone=True)
-        return self.get_unread_messages()
+    # def login_bot(self):
+    #     self.send_message("/start")
+    #     msg = self.get_unread_messages()
+    #     msg.click(share_phone=True)
+    #     return self.get_unread_messages()
 
     def switch_client(self):
         if self.current_client is self.tg_client_0:

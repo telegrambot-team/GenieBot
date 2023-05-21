@@ -224,10 +224,10 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     ctx.user_data["wishes"]["in_progress"].append(wish_id)
 
     creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
-    creator_name, creator_phone = creator_data["contact"]
+    creator_name = creator_data["contact"]
 
     text = constants.wish_taken.format(
-        wish_text=wish["text"], creator_name=creator_name, creator_phone=creator_phone
+        wish_text=wish["text"], creator_name=creator_name
     )
     ctx.bot.send_message(chat_id, text)
     ctx.bot.send_message(wish["creator_id"], constants.magick_begins)
@@ -243,8 +243,8 @@ def list_fulfilled(update: Update, ctx: CallbackContext):
         creator_data = ctx.dispatcher.user_data.get(
             ctx.bot_data.wishes[str(wish_id)]["creator_id"]
         )
-        creator_name, creator_phone = creator_data["contact"]
-        msg_text = f"{wish_text}\n{creator_name} \N{em dash} {creator_phone}"
+        creator_name = creator_data["contact"]
+        msg_text = f"{wish_text}\n{creator_name}"
         update.message.reply_text(msg_text, disable_notification=True)
 
 
@@ -265,9 +265,9 @@ def list_in_progress(update: Update, ctx: CallbackContext):
             )
         )
         creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
-        creator_name, creator_phone = creator_data["contact"]
+        creator_name = creator_data["contact"]
 
-        msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
+        msg_text = f"{wish['text']}\n{creator_name}"
         msg = update.message.reply_text(
             msg_text, reply_markup=kbd, disable_notification=True
         )
@@ -336,9 +336,9 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
             continue
 
         creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
-        creator_name, creator_phone = creator_data["contact"]
+        creator_name = creator_data["contact"]
 
-        msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
+        msg_text = f"{wish['text']}\n{creator_name}"
         update.message.reply_text(msg_text)
         try:
             ctx.bot.forward_message(

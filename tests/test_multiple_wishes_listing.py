@@ -71,7 +71,7 @@ class TestFulfill(unittest.TestCase):
         self.conversation_helper.stop_bot()
 
     def testMultipleWishesListing(self):
-        control_msg_0 = self.conversation_helper.login_bot()
+        # control_msg_0 = self.conversation_helper.login_bot()
         wish_txt = "Some wish text"
         wish_list = []
         for i in range(11):
@@ -83,7 +83,7 @@ class TestFulfill(unittest.TestCase):
         self.conversation_helper.mark_read()
 
         self.conversation_helper.switch_client()
-        control_msg_1 = self.conversation_helper.login_bot()
+        # control_msg_1 = self.conversation_helper.login_bot()
         control_msg_1.click(text=toplevel_buttons[SELECT_WISH])
         time.sleep(5)
         wishes_msg_1_page = self.conversation_helper.get_unread_messages()
