@@ -145,7 +145,7 @@ def list_move_chat(update: Update, ctx: CallbackContext):
             xs.append(name)
 
     text = "\n".join(xs)
-    logging.info("whole text length: ", len(text))
+    logging.info(f"whole text length: {len(text)}")
     if len(text) <= 4096:
         update.message.reply_text(text)
         return
@@ -158,7 +158,7 @@ def list_move_chat(update: Update, ctx: CallbackContext):
 
     while text:
         res = split_by_4096(text)
-        logging.info("splitted text length: ", len(text))
+        logging.info(f"splitted text length: {len(text)}")
         update.message.reply_text(res)
         text = text[len(res) + 1:]
 
