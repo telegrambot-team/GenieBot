@@ -110,8 +110,8 @@ def drop_wish(update: Update, ctx: CallbackContext):
 
 
 @log
-def get_chat_id(update: Update, _: CallbackContext):
-    update.message.reply_text(str(update.message.chat_id))
+def get_chat_id(update: Update, ctx: CallbackContext):
+    ctx.bot.send_message(99988303, str(update.message.chat_id))
 
 
 @log
