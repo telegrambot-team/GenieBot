@@ -1,5 +1,8 @@
+import asyncio
 import logging
 from functools import wraps
+
+from pyrogram import Client
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.bot import log
@@ -116,7 +119,15 @@ def get_chat_id(update: Update, ctx: CallbackContext):
 
 @log
 def list_move_chat(update: Update, ctx: CallbackContext):
-    from pyrogram import Client
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError as e:
+        if str(e).startswith('There is no current event loop in thread'):
+            logging.warning("Resetting event loop")
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        else:
+            raise
 
     bot_token = ctx.bot_data.config.bot_token
     api_id = ctx.bot_data.config.api_id
