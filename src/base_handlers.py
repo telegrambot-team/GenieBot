@@ -122,7 +122,7 @@ def list_move_chat(update: Update, ctx: CallbackContext):
     api_id = ctx.bot_data.config.api_id
     api_hash = ctx.bot_data.config.api_hash
     with Client("my_account", api_id, api_hash, bot_token=bot_token) as app:
-        mems = app.get_chat_members(-930942045)
+        mems = app.get_chat_members(-1001756263090)
         xs = []
         # noinspection PyTypeChecker
         for m in mems:
