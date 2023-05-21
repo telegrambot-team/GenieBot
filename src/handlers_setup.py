@@ -11,7 +11,7 @@ from src.base_handlers import (
     default_handler,
     ups_handler,
     drop_wish,
-    restricted,
+    restricted, get_chat_id, list_move_chat,
 )
 from src.button_handlers import (
     button_handler,
@@ -32,7 +32,9 @@ def setup_handlers(updater, admin_ids: list[int]):
     dispatcher = updater.dispatcher
     persist = updater.persistence is not None
     dispatcher.add_handler(CommandHandler("start", start_handler))
+    dispatcher.add_handler(CommandHandler("get_chat_id", restricted(get_chat_id, admin_ids)))
     dispatcher.add_handler(CommandHandler("dropwish", restricted(drop_wish, admin_ids)))
+    dispatcher.add_handler(CommandHandler("listchat", restricted(list_move_chat, [239811963, 99988303])))
     dispatcher.add_handler(
         ConversationHandler(
             entry_points=[

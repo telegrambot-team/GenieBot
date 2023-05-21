@@ -1,13 +1,11 @@
 import logging
 from functools import wraps
 
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
 from src.constants import (
-    start_msg,
-    request_contact_text,
     default_handler_text,
     intro_msg,
     ARTHUR_ALL_WISHES,
@@ -109,6 +107,33 @@ def drop_wish(update: Update, ctx: CallbackContext):
 
     del user_data["wishes"]["created"][wish_to_delete]
     update.message.reply_text("Желание удалено")
+
+
+@log
+def get_chat_id(update: Update, _: CallbackContext):
+    update.message.reply_text(str(update.message.chat_id))
+
+
+@log
+def list_move_chat(update: Update, ctx: CallbackContext):
+    from pyrogram import Client
+
+    bot_token = ctx.bot_data.config.bot_token
+    api_id = ctx.bot_data.config.api_id
+    api_hash = ctx.bot_data.config.api_hash
+    with Client("my_account", api_id, api_hash, bot_token=bot_token) as app:
+        mems = app.get_chat_members(-930942045)
+        xs = []
+        # noinspection PyTypeChecker
+        for m in mems:
+            name = m.user.first_name
+            if m.user.last_name:
+                name += " " + m.user.last_name
+            if m.user.username:
+                name += " @" + m.user.username
+            xs.append(name)
+
+    update.message.reply_text("\n".join(xs))
 
 
 def ups_handler(update, context):

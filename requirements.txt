@@ -17,3 +17,4 @@ Telethon==1.28.1
 telethon-session-sqlalchemy==0.2.16
 tornado==6.1
 tzlocal==2.1
+pyrogram==2.0.106
