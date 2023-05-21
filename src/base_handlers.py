@@ -144,7 +144,21 @@ def list_move_chat(update: Update, ctx: CallbackContext):
                 name += " @" + m.user.username
             xs.append(name)
 
-    update.message.reply_text("\n".join(xs))
+    text = "\n".join(xs)
+    if len(text) <= 4096:
+        update.message.reply_text(text)
+        return
+
+    def split_by_4096(txt: str):
+        if len(txt) <= 4096:
+            return txt
+        pos = txt.rfind('\n', 0, 4096)
+        return txt[:pos]
+
+    while text:
+        res = split_by_4096(text)
+        update.message.reply_text(text)
+        text = text[len(res) + 1:]
 
 
 def ups_handler(update, context):
