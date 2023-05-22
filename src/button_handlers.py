@@ -260,7 +260,7 @@ def list_in_progress(update: Update, ctx: CallbackContext):
         assert wish["status"] == constants.IN_PROGRESS
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                "Отправить фото или видео",
+                "Отправить фото или видео выполненного желания",
                 callback_data=f"{constants.fulfill_wish_inline_btn} {wish_id}",
             )
         )
@@ -294,8 +294,8 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
 
     ctx.bot.send_message(
         chat_id,
-        "\N{Genie}Жду подтверждение выполненного желания.\n"
-        "Отправь фото или видео\N{Winking Face}",
+        "\N{Genie}Жду фото или видео выполненного желания.\n"
+        "Например, сфоткайтесь с довольным получателем загаданного\N{Winking Face}",
         reply_markup=get_cancel_markup(),
     )
     ctx.user_data["wish_waiting_for_proof"] = wish_id
