@@ -4,7 +4,7 @@ from functools import wraps
 
 from pyrogram import Client
 
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
@@ -111,6 +111,10 @@ def drop_wish(update: Update, ctx: CallbackContext):
     del user_data["wishes"]["created"][wish_to_delete]
     update.message.reply_text("Желание удалено")
 
+
+@log
+def rm_kbd(update: Update, _: CallbackContext):
+    update.message.reply_text("Клавиатура убрана", reply_markup=ReplyKeyboardRemove())
 
 @log
 def get_chat_id(update: Update, ctx: CallbackContext):
