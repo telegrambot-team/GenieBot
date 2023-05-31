@@ -31,7 +31,7 @@ from src.chat_track_handler import greet_chat_members
 def setup_handlers(updater, admin_ids: list[int]):
     dispatcher = updater.dispatcher
     persist = updater.persistence is not None
-    dispatcher.add_handler(CommandHandler("start", start_handler))
+    dispatcher.add_handler(CommandHandler("start", start_handler, Filters.chat_type.private))
     dispatcher.add_handler(CommandHandler("get_chat_id", restricted(get_chat_id, admin_ids)))
     dispatcher.add_handler(CommandHandler("dropwish", restricted(drop_wish, admin_ids)))
     dispatcher.add_handler(CommandHandler("remove_keyboard", restricted(rm_kbd, admin_ids)))
