@@ -39,11 +39,12 @@ def create_bot(conf):
 def main():
     logging.basicConfig(
         level=logging.INFO,
-        format="%(filename)s: "
-        "%(levelname)s: "
-        "%(funcName)s(): "
-        "%(lineno)d:\t"
-        "%(message)s",
+        format="%(asctime)s: "
+               "%(filename)s: "
+               "%(levelname)s: "
+               "%(funcName)s(): "
+               "%(lineno)d:\t"
+               "%(message)s",
     )
     logging.info("Application started")
     conf = get_config()

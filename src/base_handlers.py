@@ -141,6 +141,8 @@ def list_move_chat(update: Update, ctx: CallbackContext):
         xs = []
         # noinspection PyTypeChecker
         for m in mems:
+            if m.user.is_deleted:
+                continue
             name = m.user.first_name
             if m.user.last_name:
                 name += " " + m.user.last_name
