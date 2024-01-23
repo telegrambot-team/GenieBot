@@ -340,9 +340,12 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
 
         msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
         update.message.reply_text(msg_text)
-        ctx.bot.forward_message(
-            conf.arthur_id, wish["fulfiller_id"], wish["proof_msg_id"]
-        )
+        try:
+            ctx.bot.forward_message(
+                conf.arthur_id, wish["fulfiller_id"], wish["proof_msg_id"]
+            )
+        except BadRequest as e:
+            logging.warning("Missing msg: ", e)
 
 
 def get_cancel_markup():
