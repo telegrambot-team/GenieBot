@@ -387,6 +387,20 @@ def button_handler(update: Update, ctx: CallbackContext):
         return
     text = update.message.text
     if text == constants.toplevel_buttons[constants.MAKE_WISH]:
+        if ctx.user_data["wishes"]["created"]:
+            not_fulfilled_wishes = sum(
+                1
+                for wish_id in ctx.user_data["wishes"]["created"]
+                if ctx.bot_data.wishes[str(wish_id)]["status"] != constants.DONE
+            )
+            if not_fulfilled_wishes >= 7:
+                update.message.reply_text(
+                    "\N{Genie}Ты уже загадал максимум желаний!\n"
+                    "Дождись, пока хоть одно из них исполнится, "
+                    "и тогда сможешь загадать новое✨"
+                )
+                return ConversationHandler.END
+
         update.message.reply_text(
             constants.waiting_for_wish, reply_markup=get_cancel_markup()
         )
