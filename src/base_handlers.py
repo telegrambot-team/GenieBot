@@ -18,7 +18,8 @@ from src.constants import (
     FULFILLED_LIST,
     SELECT_WISH,
     MAKE_WISH,
-    REMOVED, ARTHUR_STATISTICS,
+    REMOVED,
+    ARTHUR_STATISTICS,
 )
 
 
@@ -41,8 +42,7 @@ def start_handler(update: Update, _: CallbackContext):
     update.message.reply_text(
         start_msg,
         reply_markup=ReplyKeyboardMarkup(
-            [[KeyboardButton(request_contact_text, request_contact=True)]],
-            resize_keyboard=True,
+            [[KeyboardButton(request_contact_text, request_contact=True)]], resize_keyboard=True
         ),
     )
 
@@ -53,19 +53,13 @@ def default_handler(update: Update, ctx: CallbackContext):
         start_handler(update, ctx)
         return
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
-    update.message.reply_text(
-        default_handler_text, reply_markup=get_toplevel_markup(is_arthur)
-    )
+    update.message.reply_text(default_handler_text, reply_markup=get_toplevel_markup(is_arthur))
 
 
 def get_toplevel_markup(is_arthur):
     xs = [
         [toplevel_buttons[MAKE_WISH], toplevel_buttons[SELECT_WISH]],
-        [
-            toplevel_buttons[FULFILLED_LIST],
-            toplevel_buttons[MY_WISHES],
-            toplevel_buttons[WISHES_IN_PROGRESS],
-        ],
+        [toplevel_buttons[FULFILLED_LIST], toplevel_buttons[MY_WISHES], toplevel_buttons[WISHES_IN_PROGRESS]],
     ]
     if is_arthur:
         xs.append([admin_buttons[ARTHUR_ALL_WISHES]])
@@ -83,10 +77,7 @@ def drop_wish(update: Update, ctx: CallbackContext):
     # TODO: fix this, doesn't work
     chat_to_delete, wish_to_delete = map(int, ctx.args[0].split(":"))
     user_data = ctx.dispatcher.user_data.get(chat_to_delete)
-    if (
-        "wishes" not in user_data
-        or len(user_data["wishes"]["created"]) < wish_to_delete
-    ):
+    if "wishes" not in user_data or len(user_data["wishes"]["created"]) < wish_to_delete:
         update.message.reply_text("Неверные параметры")
         return
     wish_id = user_data["wishes"]["created"][wish_to_delete]
@@ -109,10 +100,7 @@ def ups_handler(update, context):
     msg_admin(
         context.bot_data.config.admin_ids,
         context.bot,
-        f"Following error occurred:\n"
-        f"{chat_id}\n"
-        f"{type(context.error)=}\n"
-        f"msg={context.error}",
+        f"Following error occurred:\n{chat_id}\n{type(context.error)=}\nmsg={context.error}",
     )
 
 

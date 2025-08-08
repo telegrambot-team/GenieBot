@@ -53,18 +53,8 @@ class DummyMessage:
 
 class TestWishLimit(unittest.TestCase):
     def _make_ctx(self, created_ids, statuses):
-        user_data = {
-            "contact": ("name", "phone"),
-            "wishes": {
-                "created": created_ids,
-                "in_progress": [],
-                "done": [],
-            },
-        }
-        wishes = {
-            str(wid): {"status": status, "creator_id": 1}
-            for wid, status in zip(created_ids, statuses)
-        }
+        user_data = {"contact": ("name", "phone"), "wishes": {"created": created_ids, "in_progress": [], "done": []}}
+        wishes = {str(wid): {"status": status, "creator_id": 1} for wid, status in zip(created_ids, statuses)}
         bot_data = SimpleNamespace(wishes=wishes)
         ctx = SimpleNamespace(user_data=user_data, bot_data=bot_data)
         return ctx
@@ -94,9 +84,7 @@ class TestWishLimit(unittest.TestCase):
         result = button_handlers.button_handler(update, ctx)
 
         self.assertEqual(result, ConversationHandler.END)
-        self.assertTrue(
-            msg.reply_text_calls[0].startswith("\N{Genie}Ты уже загадал максимум желаний!")
-        )
+        self.assertTrue(msg.reply_text_calls[0].startswith("\N{GENIE}Ты уже загадал максимум желаний!"))
 
 
 if __name__ == "__main__":

@@ -23,12 +23,7 @@ def create_bot(conf):
         persistence = None
         logging.warning("Persistence disabled")
     context_types = ContextTypes(bot_data=BotData)
-    updater = Updater(
-        conf.bot_token,
-        use_context=True,
-        persistence=persistence,
-        context_types=context_types,
-    )
+    updater = Updater(conf.bot_token, use_context=True, persistence=persistence, context_types=context_types)
     setup_handlers(updater, conf.admin_ids)
     updater.dispatcher.bot_data.config = conf
     updater.dispatcher.update_persistence()
@@ -37,12 +32,7 @@ def create_bot(conf):
 
 def main():
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(filename)s: "
-        "%(levelname)s: "
-        "%(funcName)s(): "
-        "%(lineno)d:\t"
-        "%(message)s",
+        level=logging.INFO, format="%(filename)s: %(levelname)s: %(funcName)s(): %(lineno)d:\t%(message)s"
     )
     logging.info("Application started")
     conf = get_config()

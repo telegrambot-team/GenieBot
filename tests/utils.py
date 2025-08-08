@@ -9,14 +9,7 @@ from dataclasses import dataclass
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
-from src.constants import (
-    MAKE_WISH,
-    toplevel_buttons,
-    SELECT_WISH,
-    FULFILLED_LIST,
-    MY_WISHES,
-    WISHES_IN_PROGRESS,
-)
+from src.constants import MAKE_WISH, toplevel_buttons, SELECT_WISH, FULFILLED_LIST, MY_WISHES, WISHES_IN_PROGRESS
 from src.main import create_bot
 
 
@@ -66,9 +59,7 @@ class ConversationHelper:
 
     def get_unread_count(self):
         # noinspection PyTypeChecker
-        result = self.current_client(
-            functions.messages.GetPeerDialogsRequest(peers=[self.bot_name])
-        )
+        result = self.current_client(functions.messages.GetPeerDialogsRequest(peers=[self.bot_name]))
         return result.dialogs[0].unread_count
 
     def send_message(self, txt):
@@ -91,9 +82,7 @@ class ConversationHelper:
                 # noinspection PyTypeChecker
                 lst = [
                     m
-                    for m in itertools.islice(
-                        self.current_client.iter_messages(self.bot_name), unread_count
-                    )
+                    for m in itertools.islice(self.current_client.iter_messages(self.bot_name), unread_count)
                     if m.sender.bot
                 ]
                 # noinspection PyTypeChecker
@@ -131,18 +120,8 @@ def scoped_bot(conf, client_0, client_1=None):
 
 
 def check_intro_markup(self, msg):
-    self.assertEqual(
-        msg.reply_markup.rows[0].buttons[0].text, toplevel_buttons[MAKE_WISH]
-    )
-    self.assertEqual(
-        msg.reply_markup.rows[0].buttons[1].text, toplevel_buttons[SELECT_WISH]
-    )
-    self.assertEqual(
-        msg.reply_markup.rows[1].buttons[0].text, toplevel_buttons[FULFILLED_LIST]
-    )
-    self.assertEqual(
-        msg.reply_markup.rows[1].buttons[1].text, toplevel_buttons[MY_WISHES]
-    )
-    self.assertEqual(
-        msg.reply_markup.rows[1].buttons[2].text, toplevel_buttons[WISHES_IN_PROGRESS]
-    )
+    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text, toplevel_buttons[MAKE_WISH])
+    self.assertEqual(msg.reply_markup.rows[0].buttons[1].text, toplevel_buttons[SELECT_WISH])
+    self.assertEqual(msg.reply_markup.rows[1].buttons[0].text, toplevel_buttons[FULFILLED_LIST])
+    self.assertEqual(msg.reply_markup.rows[1].buttons[1].text, toplevel_buttons[MY_WISHES])
+    self.assertEqual(msg.reply_markup.rows[1].buttons[2].text, toplevel_buttons[WISHES_IN_PROGRESS])
