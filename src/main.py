@@ -48,13 +48,7 @@ def main():
     conf = get_config()
     updater = create_bot(conf)
     updater.start_polling()
-
-    if conf.pinger_enabled:
-        from src.bot_pinger import run_pinger
-
-        asyncio.run(run_pinger(conf))
-    else:
-        updater.idle()
+    updater.idle()
     if updater.running:
         updater.stop()
     logging.info("Application shut down")
