@@ -1,18 +1,35 @@
 import dataclasses
-import os
 
 from dataclasses import dataclass
 from functools import lru_cache
 
-from dotenv import load_dotenv
+from pydantic import PostgresDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass
-class Config:
+class Config(BaseSettings):
     bot_token: str
-    db_url: str
+    db_url: PostgresDsn | None = None
     admin_ids: list[int]
     arthur_id: int
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+    @field_validator("db_url", mode="before")
+    @classmethod
+    def _normalize_db_url(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql://")
+        return v
+
+    @field_validator("admin_ids", mode="before")
+    @classmethod
+    def _parse_admin_ids(cls, v: str | list[int]) -> list[int]:
+        if isinstance(v, str):
+            return [int(part) for part in v.split(";") if part]
+        return v
 
 
 @dataclass
@@ -23,11 +40,4 @@ class BotData:
 
 @lru_cache(maxsize=1)
 def get_config() -> Config:
-    load_dotenv()
-    token = os.environ["BOT_TOKEN"]
-    database_url = os.environ.get("DATABASE_URL") or ""
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://")
-    admin_ids = list(map(int, os.environ["ADMIN_IDS"].split(";")))
-    arthur_id = int(os.environ["ARTHUR_ID"])
-    return Config(bot_token=token, db_url=database_url, admin_ids=admin_ids, arthur_id=arthur_id)
+    return Config()
