@@ -4,13 +4,17 @@ import logging
 import os
 import time
 import traceback
+
 from dataclasses import dataclass
+from pathlib import Path
 
 from telethon.sync import TelegramClient
 from telethon.tl import functions
 
-from src.constants import MAKE_WISH, toplevel_buttons, SELECT_WISH, FULFILLED_LIST, MY_WISHES, WISHES_IN_PROGRESS
+from src.constants import FULFILLED_LIST, MAKE_WISH, MY_WISHES, SELECT_WISH, WISHES_IN_PROGRESS, toplevel_buttons
 from src.main import create_bot
+
+logger = logging.getLogger(__name__)
 
 
 def init_session(session_path, api_id, api_hash):
@@ -23,7 +27,7 @@ class ClientHelper:
         self.stack = contextlib.ExitStack()
         api_id = int(os.environ["API_ID"])
         api_hash = os.environ["API_HASH"]
-        if not os.path.exists(session_path):
+        if not Path(session_path).exists():
             init_session(session_path, api_id, api_hash)
         self.client = TelegramClient(session_path, api_id, api_hash)
         self.resource = self.stack.enter_context(self.client)
@@ -64,8 +68,7 @@ class ConversationHelper:
 
     def send_message(self, txt):
         # noinspection PyTypeChecker
-        msg = self.current_client.send_message(self.bot_name, txt)
-        return msg
+        return self.current_client.send_message(self.bot_name, txt)
 
     def mark_read(self, client=None):
         if client is None:
@@ -87,12 +90,13 @@ class ConversationHelper:
                 ]
                 # noinspection PyTypeChecker
                 self.current_client.send_read_acknowledge(self.bot_name)
-                logging.info([m.text for m in lst])
+                logger.info([m.text for m in lst])
                 return lst[0] if len(lst) == 1 else lst
             if now + timeout < time.time():
                 break
             time.sleep(0.1)
-        raise TimeoutError("No messages delivered in time")
+        msg = "No messages delivered in time"
+        raise TimeoutError(msg)
 
     def login_bot(self):
         self.send_message("/start")
@@ -119,9 +123,9 @@ def scoped_bot(conf, client_0, client_1=None):
         bot.stop_bot()
 
 
-def check_intro_markup(self, msg):
-    self.assertEqual(msg.reply_markup.rows[0].buttons[0].text, toplevel_buttons[MAKE_WISH])
-    self.assertEqual(msg.reply_markup.rows[0].buttons[1].text, toplevel_buttons[SELECT_WISH])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[0].text, toplevel_buttons[FULFILLED_LIST])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[1].text, toplevel_buttons[MY_WISHES])
-    self.assertEqual(msg.reply_markup.rows[1].buttons[2].text, toplevel_buttons[WISHES_IN_PROGRESS])
+def check_intro_markup(msg):
+    assert msg.reply_markup.rows[0].buttons[0].text == toplevel_buttons[MAKE_WISH]
+    assert msg.reply_markup.rows[0].buttons[1].text == toplevel_buttons[SELECT_WISH]
+    assert msg.reply_markup.rows[1].buttons[0].text == toplevel_buttons[FULFILLED_LIST]
+    assert msg.reply_markup.rows[1].buttons[1].text == toplevel_buttons[MY_WISHES]
+    assert msg.reply_markup.rows[1].buttons[2].text == toplevel_buttons[WISHES_IN_PROGRESS]

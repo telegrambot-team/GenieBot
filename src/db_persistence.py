@@ -1,25 +1,27 @@
 import logging
 import traceback
+
 from collections import defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import asdict
 
-from sqlalchemy import create_engine, Integer, Column, JSON
+from sqlalchemy import JSON, Column, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from telegram.ext import BasePersistence
 
-import src.config as config
+from src import config
+
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
 
-# noinspection PyPep8Naming
 @contextmanager
-def session_scope(SessionCls):
+def session_scope(session_cls):
     """Provide a transactional scope around a series of operations."""
-    session = SessionCls()
+    session = session_cls()
     try:
         yield session
         session.commit()
@@ -80,7 +82,7 @@ class DBPersistence(BasePersistence):
 
     @staticmethod
     def _load(session, from_table, dst):
-        logging.info(f"Loading state {from_table.__tablename__}")
+        logger.info("Loading state %s", from_table.__tablename__)
         result = session.query(from_table).all()
         for row in result:
             dst[row.id] = row.data
@@ -95,36 +97,34 @@ class DBPersistence(BasePersistence):
         (chat_id,) = key
         if self.conversation_data.setdefault(chat_id, {}).get(name) == new_state:
             return
-        logging.info(f"Updating conversation {name} with {key=}={new_state}")
+        logger.info("Updating conversation %s with %s=%s", name, key, new_state)
         self.conversation_data[chat_id][name] = new_state
         with session_scope(self.Session) as session:
             session.merge(
                 ConversationData(
                     id=chat_id,
-                    data=self.conversation_data[chat_id],  # noqa
+                    data=self.conversation_data[chat_id],
                 )
-            )  # noqa
+            )
 
     def get_user_data(self):
         return deepcopy(self.user_data)
 
     def update_user_data(self, user_id, data):
-        # if self.user_data[user_id] == data:
-        #     return
-        logging.info(f"Updating {user_id} with {data}")
+        logger.info("Updating %s with %s", user_id, data)
         self.user_data[user_id] = data
         with session_scope(self.Session) as session:
-            session.merge(UserData(id=user_id, data=data))  # noqa  # noqa
+            session.merge(UserData(id=user_id, data=data))
 
     def flush(self):
         with session_scope(self.Session) as session:
             for user_id, data in self.user_data.items():
-                session.merge(UserData(id=user_id, data=data))  # noqa
+                session.merge(UserData(id=user_id, data=data))
             for chat_id, data in self.chat_data.items():
-                session.merge(ChatData(id=chat_id, data=data))  # noqa
-            session.merge(BotData(id=0, data=asdict(self.bot_data)))  # noqa
+                session.merge(ChatData(id=chat_id, data=data))
+            session.merge(BotData(id=0, data=asdict(self.bot_data)))
             for chat_id, data in self.conversation_data.items():
-                session.merge(ConversationData(id=chat_id, data=data))  # noqa
+                session.merge(ConversationData(id=chat_id, data=data))
         self.engine.dispose()
 
     def get_chat_data(self):
@@ -134,21 +134,16 @@ class DBPersistence(BasePersistence):
         return deepcopy(self.bot_data)
 
     def update_chat_data(self, chat_id, data):
-        # if self.chat_data[chat_id] == data:
-        #     return
-        logging.info(f"Updating {chat_id} with {data}")
+        logger.info("Updating %s with %s", chat_id, data)
         self.chat_data[chat_id] = data
         with session_scope(self.Session) as session:
-            session.merge(ChatData(id=chat_id, data=data))  # noqa
+            session.merge(ChatData(id=chat_id, data=data))
 
     def update_bot_data(self, data):
-        # TODO: fix check for new data
-        # if self.bot_data == data:
-        #     return
-        logging.info(f"Updating bot_data with {data}")
+        logger.info("Updating bot_data with %s", data)
         self.bot_data = data
         with session_scope(self.Session) as session:
-            session.merge(BotData(id=0, data=asdict(data)))  # noqa
+            session.merge(BotData(id=0, data=asdict(data)))
 
 
 if __name__ == "__main__":

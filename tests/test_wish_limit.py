@@ -1,7 +1,9 @@
-import sys
 import types
-import unittest
+
 from types import SimpleNamespace
+
+import sys
+import unittest
 
 # Create minimal stubs for telegram modules so tests can run without the
 # actual telegram package installed.
@@ -36,10 +38,9 @@ sys.modules.setdefault("telegram.error", telegram.error)
 sys.modules.setdefault("telegram.bot", telegram.bot)
 sys.modules.setdefault("telegram.ext", telegram.ext)
 
-from telegram.ext import ConversationHandler
+from telegram.ext import ConversationHandler  # noqa: E402
 
-from src import button_handlers
-from src import constants
+from src import button_handlers, constants  # noqa: E402
 
 
 class DummyMessage:
@@ -49,15 +50,15 @@ class DummyMessage:
 
     def reply_text(self, text, reply_markup=None):
         self.reply_text_calls.append(text)
+        _ = reply_markup
 
 
 class TestWishLimit(unittest.TestCase):
     def _make_ctx(self, created_ids, statuses):
         user_data = {"contact": ("name", "phone"), "wishes": {"created": created_ids, "in_progress": [], "done": []}}
-        wishes = {str(wid): {"status": status, "creator_id": 1} for wid, status in zip(created_ids, statuses)}
+        wishes = {str(wid): {"status": status, "creator_id": 1} for wid, status in zip(created_ids, statuses, strict=False)}
         bot_data = SimpleNamespace(wishes=wishes)
-        ctx = SimpleNamespace(user_data=user_data, bot_data=bot_data)
-        return ctx
+        return SimpleNamespace(user_data=user_data, bot_data=bot_data)
 
     def _make_update(self):
         msg = DummyMessage(constants.toplevel_buttons[constants.MAKE_WISH])
@@ -72,8 +73,8 @@ class TestWishLimit(unittest.TestCase):
 
         result = button_handlers.button_handler(update, ctx)
 
-        self.assertEqual(result, constants.MAKE_WISH)
-        self.assertEqual(msg.reply_text_calls[0], constants.waiting_for_wish)
+        assert result == constants.MAKE_WISH
+        assert msg.reply_text_calls[0] == constants.waiting_for_wish
 
     def test_limit_enforced_for_active_wishes(self):
         created_ids = list(range(7))
@@ -83,8 +84,8 @@ class TestWishLimit(unittest.TestCase):
 
         result = button_handlers.button_handler(update, ctx)
 
-        self.assertEqual(result, ConversationHandler.END)
-        self.assertTrue(msg.reply_text_calls[0].startswith("\N{GENIE}Ты уже загадал максимум желаний!"))
+        assert result == ConversationHandler.END
+        assert msg.reply_text_calls[0].startswith("\N{GENIE}Ты уже загадал максимум желаний!")
 
 
 if __name__ == "__main__":

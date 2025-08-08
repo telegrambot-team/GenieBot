@@ -1,18 +1,18 @@
-from telegram.ext import CommandHandler, Filters, MessageHandler, ConversationHandler, CallbackQueryHandler
+from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler, Filters, MessageHandler
 
-from src.base_handlers import start_handler, contact_handler, default_handler, ups_handler, drop_wish, restricted
+from src import constants
+from src.base_handlers import contact_handler, default_handler, drop_wish, restricted, start_handler, ups_handler
 from src.button_handlers import (
     button_handler,
-    make_wish_handler,
-    incorrect_wish_handler,
-    remove_wish_handler,
-    take_wish_handler,
-    fulfill_wish_handler,
-    proof_handler,
     cancel_wish_making_handler,
     control_list_wish_handler,
+    fulfill_wish_handler,
+    incorrect_wish_handler,
+    make_wish_handler,
+    proof_handler,
+    remove_wish_handler,
+    take_wish_handler,
 )
-import src.constants as constants
 
 
 def setup_handlers(updater, admin_ids: list[int]):
