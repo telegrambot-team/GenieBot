@@ -232,7 +232,8 @@ def list_in_progress(update: Update, ctx: CallbackContext):
     for wish_id in ctx.user_data["wishes"]["in_progress"]:
         wish = ctx.bot_data.wishes[str(wish_id)]
         if wish["status"] != constants.IN_PROGRESS:
-            raise AssertionError
+            msg = f"Wish {wish_id} status {wish['status']} isn't in progress"
+            raise RuntimeError(msg)
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 "Отправить фото или видео", callback_data=f"{constants.fulfill_wish_inline_btn} {wish_id}"
@@ -335,7 +336,8 @@ def admin_list_statistics(update: Update, ctx: CallbackContext):
     best_creators_msg = "Чьи желания были самыми выполняемыми:\n"
     for telegram_id, wish_count in top_creators.most_common(3):
         if telegram_id not in ctx.dispatcher.user_data:
-            raise AssertionError
+            msg = f"User {telegram_id} not found in dispatcher user data"
+            raise RuntimeError(msg)
         contact = ctx.dispatcher.user_data[telegram_id]["contact"]
         best_creators_msg += f"{contact} — {wish_count}\n"
 
@@ -344,7 +346,8 @@ def admin_list_statistics(update: Update, ctx: CallbackContext):
     best_fulfillers_msg = "Кто больше всех выполнял:\n"
     for telegram_id, wish_count in top_fulfillers.most_common(3):
         if telegram_id not in ctx.dispatcher.user_data:
-            raise AssertionError
+            msg = f"User {telegram_id} not found in dispatcher user data"
+            raise RuntimeError(msg)
         contact = ctx.dispatcher.user_data[telegram_id]["contact"]
         best_fulfillers_msg += f"{contact} — {wish_count}\n"
 
@@ -388,13 +391,15 @@ def button_handler(update: Update, ctx: CallbackContext):  # noqa: C901, PLR0911
         return ConversationHandler.END
     if text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]:
         if update.effective_user.id != ctx.bot_data.config.arthur_id:
-            raise AssertionError
+            msg = "User is not authorized to view all wishes"
+            raise RuntimeError(msg)
         admin_list_all_wishes(update, ctx)
         return ConversationHandler.END
 
     if text == constants.admin_buttons[constants.ARTHUR_STATISTICS]:
         if update.effective_user.id != ctx.bot_data.config.arthur_id:
-            raise AssertionError
+            msg = "User is not authorized to view statistics"
+            raise RuntimeError(msg)
         admin_list_statistics(update, ctx)
         return ConversationHandler.END
 
