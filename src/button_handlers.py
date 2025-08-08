@@ -3,12 +3,7 @@ import logging
 import math
 from collections import Counter
 
-from telegram import (
-    Update,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    ReplyKeyboardMarkup,
-)
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
 from telegram.bot import log
 from telegram.ext import CallbackContext, ConversationHandler
 from telegram.error import BadRequest
@@ -43,9 +38,7 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
     ctx.user_data["wishes"]["created"].append(wish_id)
 
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
-    update.message.reply_text(
-        constants.lock_and_load, reply_markup=get_toplevel_markup(is_arthur)
-    )
+    update.message.reply_text(constants.lock_and_load, reply_markup=get_toplevel_markup(is_arthur))
     return ConversationHandler.END
 
 
@@ -61,22 +54,16 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
         if wish["status"] == constants.WAITING:
             kbd = InlineKeyboardMarkup.from_button(
                 InlineKeyboardButton(
-                    constants.delete_wish_btn_txt,
-                    callback_data=f"{constants.drop_wish_inline_btn} {wish_id}",
+                    constants.delete_wish_btn_txt, callback_data=f"{constants.drop_wish_inline_btn} {wish_id}"
                 )
             )
         elif wish["status"] == constants.IN_PROGRESS:
             kbd = InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    "Выполняется" "\N{Hourglass with Flowing Sand}",
-                    callback_data="pass",
-                )
+                InlineKeyboardButton("Выполняется\N{HOURGLASS WITH FLOWING SAND}", callback_data="pass")
             )
         elif wish["status"] == constants.DONE:
             kbd = InlineKeyboardMarkup.from_button(
-                InlineKeyboardButton(
-                    "Выполнено" "\N{White Heavy Check Mark}", callback_data="pass"
-                )
+                InlineKeyboardButton("Выполнено\N{WHITE HEAVY CHECK MARK}", callback_data="pass")
             )
         else:
             raise RuntimeError(f"Invalid wish status {wish['status']}")
@@ -126,36 +113,23 @@ def render_wishes(update: Update, ctx: CallbackContext):
     page_number = start_idx // constants.WISHES_TO_SHOW_LIMIT + 1
     for idx, wish in enumerate(wishes_slice):
         btn_multilist = [
-            [
-                InlineKeyboardButton(
-                    "Взять",
-                    callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}",
-                )
-            ]
+            [InlineKeyboardButton("Взять", callback_data=f"{constants.take_wish_inline_btn} {wish['wish_id']}")]
         ]
-        last_wish = is_last_wish(
-            idx, start_idx, len(filtered_wishes), constants.WISHES_TO_SHOW_LIMIT
-        )
+        last_wish = is_last_wish(idx, start_idx, len(filtered_wishes), constants.WISHES_TO_SHOW_LIMIT)
         if enable_paging and last_wish:
             btn_multilist.append(
                 [
                     InlineKeyboardButton(
-                        "\N{LEFTWARDS BLACK ARROW}",
-                        callback_data=f"{constants.take_wish_inline_btn} left",
+                        "\N{LEFTWARDS BLACK ARROW}", callback_data=f"{constants.take_wish_inline_btn} left"
                     ),
+                    InlineKeyboardButton(f"{page_number} из {group_count}", callback_data="ignore"),
                     InlineKeyboardButton(
-                        f"{page_number} из {group_count}", callback_data="ignore"
-                    ),
-                    InlineKeyboardButton(
-                        "\N{BLACK RIGHTWARDS ARROW}",
-                        callback_data=f"{constants.take_wish_inline_btn} right",
+                        "\N{BLACK RIGHTWARDS ARROW}", callback_data=f"{constants.take_wish_inline_btn} right"
                     ),
                 ]
             )
         kbd = InlineKeyboardMarkup(btn_multilist)
-        msg = ctx.bot.send_message(
-            chat_id, wish["text"], reply_markup=kbd, disable_notification=True
-        )
+        msg = ctx.bot.send_message(chat_id, wish["text"], reply_markup=kbd, disable_notification=True)
         ctx.user_data["select_wish_msg_id"].append(msg.message_id)
         counter += 1
 
@@ -171,7 +145,7 @@ def select_wish(update: Update, ctx: CallbackContext):
         return
 
     ctx.user_data["start_idx"] = 0
-    ctx.user_data['selecting_wish'] = 1
+    ctx.user_data["selecting_wish"] = 1
     render_wishes(update, ctx)
 
 
@@ -179,7 +153,7 @@ def select_wish(update: Update, ctx: CallbackContext):
 def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
-    if ctx.user_data['selecting_wish'] == 0:
+    if ctx.user_data["selecting_wish"] == 0:
         logging.warning(f"Ignoring duplicate call of control_list_wish_handler with user_data={ctx.user_data}")
         return
 
@@ -201,7 +175,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
 
 @log
 def take_wish_handler(update: Update, ctx: CallbackContext):
-    if ctx.user_data['selecting_wish'] == 0:
+    if ctx.user_data["selecting_wish"] == 0:
         logging.warning(f"Ignoring duplicate call of take_wish_handler with user_data={ctx.user_data}")
         return
     wish_data = update.callback_query.data.split(" ")[1]
@@ -212,10 +186,10 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
 
     del ctx.user_data["start_idx"]
     del ctx.user_data["select_wish_msg_id"]
-    ctx.user_data['selecting_wish'] = 0
+    ctx.user_data["selecting_wish"] = 0
 
     wish = ctx.bot_data.wishes[str(wish_id)]
-    if wish['status'] != constants.WAITING:
+    if wish["status"] != constants.WAITING:
         ctx.bot.send_message(chat_id, "Это желание уже взяли😅")
         return
     wish["status"] = constants.IN_PROGRESS
@@ -226,9 +200,7 @@ def take_wish_handler(update: Update, ctx: CallbackContext):
     creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
     creator_name, creator_phone = creator_data["contact"]
 
-    text = constants.wish_taken.format(
-        wish_text=wish["text"], creator_name=creator_name, creator_phone=creator_phone
-    )
+    text = constants.wish_taken.format(wish_text=wish["text"], creator_name=creator_name, creator_phone=creator_phone)
     ctx.bot.send_message(chat_id, text)
     ctx.bot.send_message(wish["creator_id"], constants.magick_begins)
 
@@ -240,11 +212,9 @@ def list_fulfilled(update: Update, ctx: CallbackContext):
         return
     for wish_id in ctx.user_data["wishes"]["done"]:
         wish_text = ctx.bot_data.wishes[str(wish_id)]["text"]
-        creator_data = ctx.dispatcher.user_data.get(
-            ctx.bot_data.wishes[str(wish_id)]["creator_id"]
-        )
+        creator_data = ctx.dispatcher.user_data.get(ctx.bot_data.wishes[str(wish_id)]["creator_id"])
         creator_name, creator_phone = creator_data["contact"]
-        msg_text = f"{wish_text}\n{creator_name} \N{em dash} {creator_phone}"
+        msg_text = f"{wish_text}\n{creator_name} \N{EM DASH} {creator_phone}"
         update.message.reply_text(msg_text, disable_notification=True)
 
 
@@ -260,17 +230,14 @@ def list_in_progress(update: Update, ctx: CallbackContext):
         assert wish["status"] == constants.IN_PROGRESS
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
-                "Отправить фото или видео",
-                callback_data=f"{constants.fulfill_wish_inline_btn} {wish_id}",
+                "Отправить фото или видео", callback_data=f"{constants.fulfill_wish_inline_btn} {wish_id}"
             )
         )
         creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
         creator_name, creator_phone = creator_data["contact"]
 
-        msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
-        msg = update.message.reply_text(
-            msg_text, reply_markup=kbd, disable_notification=True
-        )
+        msg_text = f"{wish['text']}\n{creator_name} \N{EM DASH} {creator_phone}"
+        msg = update.message.reply_text(msg_text, reply_markup=kbd, disable_notification=True)
         ctx.user_data["fulfill_wish_msg_id"].append(msg.message_id)
 
 
@@ -294,8 +261,7 @@ def fulfill_wish_handler(update: Update, ctx: CallbackContext):
 
     ctx.bot.send_message(
         chat_id,
-        "\N{Genie}Жду подтверждение выполненного желания.\n"
-        "Отправь фото или видео\N{Winking Face}",
+        "\N{GENIE}Жду подтверждение выполненного желания.\nОтправь фото или видео\N{WINKING FACE}",
         reply_markup=get_cancel_markup(),
     )
     ctx.user_data["wish_waiting_for_proof"] = wish_id
@@ -318,9 +284,7 @@ def proof_handler(update: Update, ctx: CallbackContext):
     ctx.user_data["wishes"]["done"].append(wish_id)
     ctx.user_data["wishes"]["in_progress"].remove(wish_id)
     is_arthur = ctx.bot_data.config.arthur_id == update.effective_user.id
-    update.message.reply_text(
-        "Желание исполнено👍", reply_markup=get_toplevel_markup(is_arthur)
-    )
+    update.message.reply_text("Желание исполнено👍", reply_markup=get_toplevel_markup(is_arthur))
 
     creator_id = wish["creator_id"]
     ctx.bot.forward_message(creator_id, wish["fulfiller_id"], wish["proof_msg_id"])
@@ -338,12 +302,10 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
         creator_data = ctx.dispatcher.user_data.get(wish["creator_id"])
         creator_name, creator_phone = creator_data["contact"]
 
-        msg_text = f"{wish['text']}\n{creator_name} \N{em dash} {creator_phone}"
+        msg_text = f"{wish['text']}\n{creator_name} \N{EM DASH} {creator_phone}"
         update.message.reply_text(msg_text)
         try:
-            ctx.bot.forward_message(
-                conf.arthur_id, wish["fulfiller_id"], wish["proof_msg_id"]
-            )
+            ctx.bot.forward_message(conf.arthur_id, wish["fulfiller_id"], wish["proof_msg_id"])
         except BadRequest as e:
             logging.warning("Missing msg: ", e)
 
@@ -354,14 +316,16 @@ def get_cancel_markup():
 
 
 def admin_list_statistics(update: Update, ctx: CallbackContext):
-    fulfilled_wishes = list(filter(lambda w: w['status'] == constants.DONE, ctx.bot_data.wishes.values()))
+    fulfilled_wishes = list(filter(lambda w: w["status"] == constants.DONE, ctx.bot_data.wishes.values()))
 
-    top_creators = Counter([w['creator_id'] for w in fulfilled_wishes])
-    top_fulfillers = Counter([w['fulfiller_id'] for w in fulfilled_wishes])
+    top_creators = Counter([w["creator_id"] for w in fulfilled_wishes])
+    top_fulfillers = Counter([w["fulfiller_id"] for w in fulfilled_wishes])
 
-    update.message.reply_text(f"Людей в боте: {len(ctx.dispatcher.user_data)}\n"
-                              f"Желаний загадано: {len(ctx.bot_data.wishes)}\n"
-                              f"Желаний исполнено: {len(fulfilled_wishes)}")
+    update.message.reply_text(
+        f"Людей в боте: {len(ctx.dispatcher.user_data)}\n"
+        f"Желаний загадано: {len(ctx.bot_data.wishes)}\n"
+        f"Желаний исполнено: {len(fulfilled_wishes)}"
+    )
 
     best_creators_msg = "Чьи желания были самыми выполняемыми:\n"
     for telegram_id, wish_count in top_creators.most_common(3):
@@ -395,15 +359,13 @@ def button_handler(update: Update, ctx: CallbackContext):
             )
             if not_fulfilled_wishes >= 7:
                 update.message.reply_text(
-                    "\N{Genie}Ты уже загадал максимум желаний!\n"
+                    "\N{GENIE}Ты уже загадал максимум желаний!\n"
                     "Дождись, пока хоть одно из них исполнится, "
                     "и тогда сможешь загадать новое✨"
                 )
                 return ConversationHandler.END
 
-        update.message.reply_text(
-            constants.waiting_for_wish, reply_markup=get_cancel_markup()
-        )
+        update.message.reply_text(constants.waiting_for_wish, reply_markup=get_cancel_markup())
         return constants.MAKE_WISH
     elif text == constants.toplevel_buttons[constants.SELECT_WISH]:
         select_wish(update, ctx)

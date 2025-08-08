@@ -88,21 +88,20 @@ class DBPersistence(BasePersistence):
     def get_conversations(self, name):
         conversations_by_name = {}
         for user_id, conv_dict in self.conversation_data.items():
-            conversations_by_name[
-                user_id,
-            ] = conv_dict.get(name, None)
+            conversations_by_name[user_id,] = conv_dict.get(name, None)
         return conversations_by_name
 
     def update_conversation(self, name, key, new_state):
         (chat_id,) = key
         if self.conversation_data.setdefault(chat_id, {}).get(name) == new_state:
             return
-        logging.info(f"Updating conversation {name}" f" with {key=}={new_state}")
+        logging.info(f"Updating conversation {name} with {key=}={new_state}")
         self.conversation_data[chat_id][name] = new_state
         with session_scope(self.Session) as session:
             session.merge(
                 ConversationData(
-                    id=chat_id, data=self.conversation_data[chat_id]  # noqa
+                    id=chat_id,
+                    data=self.conversation_data[chat_id],  # noqa
                 )
             )  # noqa
 
@@ -152,8 +151,8 @@ class DBPersistence(BasePersistence):
             session.merge(BotData(id=0, data=asdict(data)))  # noqa
 
 
-if __name__ == '__main__':
-    pers = DBPersistence('postgresql://')
+if __name__ == "__main__":
+    pers = DBPersistence("postgresql://")
     ch = pers.user_data[267932259]
-    del ch['wishes']['in_progress'][2]
+    del ch["wishes"]["in_progress"][2]
     pers.update_user_data(267932259, ch)

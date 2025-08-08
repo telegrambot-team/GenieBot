@@ -34,10 +34,5 @@ def get_config():
         database_url = database_url.replace("postgres://", "postgresql://")
     admin_ids = list(map(int, os.environ["ADMIN_IDS"].split(";")))
     arthur_id = int(os.environ["ARTHUR_ID"])
-    config_instance = Config(
-        bot_token=token,
-        db_url=database_url,
-        admin_ids=admin_ids,
-        arthur_id=arthur_id,
-    )
+    config_instance = Config(bot_token=token, db_url=database_url, admin_ids=admin_ids, arthur_id=arthur_id)
     return config_instance
