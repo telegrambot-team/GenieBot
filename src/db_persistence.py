@@ -100,12 +100,7 @@ class DBPersistence(BasePersistence):
         logger.info("Updating conversation %s with %s=%s", name, key, new_state)
         self.conversation_data[chat_id][name] = new_state
         with session_scope(self.Session) as session:
-            session.merge(
-                ConversationData(
-                    id=chat_id,
-                    data=self.conversation_data[chat_id],
-                )
-            )
+            session.merge(ConversationData(id=chat_id, data=self.conversation_data[chat_id]))
 
     def get_user_data(self):
         return deepcopy(self.user_data)

@@ -106,9 +106,7 @@ def render_wishes(update: Update, ctx: CallbackContext):
     reversed_wishes = reversed(ctx.bot_data.wishes.values())
 
     def wish_filter(wish_):
-        return not (
-            wish_["creator_id"] == chat_id or wish_["status"] != constants.WAITING
-        )
+        return not (wish_["creator_id"] == chat_id or wish_["status"] != constants.WAITING)
 
     filtered_wishes = list(filter(wish_filter, reversed_wishes))
     wishes_slice = list(itertools.islice(filtered_wishes, start_idx, end_idx))
@@ -159,10 +157,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
     if ctx.user_data["selecting_wish"] == 0:
-        logger.warning(
-            "Ignoring duplicate call of control_list_wish_handler with user_data=%s",
-            ctx.user_data,
-        )
+        logger.warning("Ignoring duplicate call of control_list_wish_handler with user_data=%s", ctx.user_data)
         return
 
     wish_data = update.callback_query.data.split(" ")[1]
@@ -185,10 +180,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
 @log
 def take_wish_handler(update: Update, ctx: CallbackContext):
     if ctx.user_data["selecting_wish"] == 0:
-        logger.warning(
-            "Ignoring duplicate call of take_wish_handler with user_data=%s",
-            ctx.user_data,
-        )
+        logger.warning("Ignoring duplicate call of take_wish_handler with user_data=%s", ctx.user_data)
         return
     wish_data = update.callback_query.data.split(" ")[1]
     wish_id = int(wish_data)

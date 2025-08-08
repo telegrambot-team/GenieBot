@@ -56,7 +56,9 @@ class DummyMessage:
 class TestWishLimit(unittest.TestCase):
     def _make_ctx(self, created_ids, statuses):
         user_data = {"contact": ("name", "phone"), "wishes": {"created": created_ids, "in_progress": [], "done": []}}
-        wishes = {str(wid): {"status": status, "creator_id": 1} for wid, status in zip(created_ids, statuses, strict=False)}
+        wishes = {
+            str(wid): {"status": status, "creator_id": 1} for wid, status in zip(created_ids, statuses, strict=False)
+        }
         bot_data = SimpleNamespace(wishes=wishes)
         return SimpleNamespace(user_data=user_data, bot_data=bot_data)
 
