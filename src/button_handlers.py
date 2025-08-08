@@ -1,16 +1,20 @@
 import itertools
 import logging
 import math
+
 from collections import Counter
 
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.bot import log
-from telegram.ext import CallbackContext, ConversationHandler
 from telegram.error import BadRequest
+from telegram.ext import CallbackContext, ConversationHandler
 
 import src.constants
-from src.base_handlers import start_handler, main_handler, get_toplevel_markup
-import src.constants as constants
+
+from src import constants
+from src.base_handlers import get_toplevel_markup, main_handler, start_handler
+
+logger = logging.getLogger(__name__)
 
 
 def incorrect_wish_handler(update: Update, _: CallbackContext):
@@ -45,7 +49,7 @@ def make_wish_handler(update: Update, ctx: CallbackContext):
 def list_my_wishes(update: Update, ctx: CallbackContext):
     if not ctx.user_data["wishes"]["created"]:
         update.message.reply_text(constants.no_self_created_wishes)
-        return
+        return None
 
     ctx.user_data["list_wish_msg_id"] = {}
 
@@ -66,7 +70,8 @@ def list_my_wishes(update: Update, ctx: CallbackContext):
                 InlineKeyboardButton("Выполнено\N{WHITE HEAVY CHECK MARK}", callback_data="pass")
             )
         else:
-            raise RuntimeError(f"Invalid wish status {wish['status']}")
+            msg = f"Invalid wish status {wish['status']}"
+            raise RuntimeError(msg)
         msg = update.message.reply_text(wish["text"], reply_markup=kbd)
         ctx.user_data["list_wish_msg_id"][wish_id] = msg.message_id
     return ConversationHandler.END
@@ -101,9 +106,7 @@ def render_wishes(update: Update, ctx: CallbackContext):
     reversed_wishes = reversed(ctx.bot_data.wishes.values())
 
     def wish_filter(wish_):
-        if wish_["creator_id"] == chat_id or wish_["status"] != constants.WAITING:
-            return False
-        return True
+        return not (wish_["creator_id"] == chat_id or wish_["status"] != constants.WAITING)
 
     filtered_wishes = list(filter(wish_filter, reversed_wishes))
     wishes_slice = list(itertools.islice(filtered_wishes, start_idx, end_idx))
@@ -154,7 +157,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
     if ctx.user_data["selecting_wish"] == 0:
-        logging.warning(f"Ignoring duplicate call of control_list_wish_handler with user_data={ctx.user_data}")
+        logger.warning("Ignoring duplicate call of control_list_wish_handler with user_data=%s", ctx.user_data)
         return
 
     wish_data = update.callback_query.data.split(" ")[1]
@@ -163,7 +166,8 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
     elif wish_data == "left":
         new_idx = ctx.user_data["start_idx"] - constants.WISHES_TO_SHOW_LIMIT
     else:
-        raise RuntimeError("Unexpected command")
+        msg = "Unexpected command"
+        raise RuntimeError(msg)
     if new_idx < 0 or ctx.user_data["len_filtered_wishes"] <= new_idx:
         return
     ctx.user_data["start_idx"] = new_idx
@@ -176,7 +180,7 @@ def control_list_wish_handler(update: Update, ctx: CallbackContext):
 @log
 def take_wish_handler(update: Update, ctx: CallbackContext):
     if ctx.user_data["selecting_wish"] == 0:
-        logging.warning(f"Ignoring duplicate call of take_wish_handler with user_data={ctx.user_data}")
+        logger.warning("Ignoring duplicate call of take_wish_handler with user_data=%s", ctx.user_data)
         return
     wish_data = update.callback_query.data.split(" ")[1]
     wish_id = int(wish_data)
@@ -227,7 +231,9 @@ def list_in_progress(update: Update, ctx: CallbackContext):
     ctx.user_data["fulfill_wish_msg_id"] = []
     for wish_id in ctx.user_data["wishes"]["in_progress"]:
         wish = ctx.bot_data.wishes[str(wish_id)]
-        assert wish["status"] == constants.IN_PROGRESS
+        if wish["status"] != constants.IN_PROGRESS:
+            msg = f"Wish {wish_id} status {wish['status']} isn't in progress"
+            raise RuntimeError(msg)
         kbd = InlineKeyboardMarkup.from_button(
             InlineKeyboardButton(
                 "Отправить фото или видео", callback_data=f"{constants.fulfill_wish_inline_btn} {wish_id}"
@@ -249,7 +255,7 @@ def safe_delete_msg_list(msg_ids, chat_id, bot):
         if e.message != "Message can't be deleted for everyone":
             raise
 
-        logging.warning(e)
+        logger.warning("%s", e)
 
 
 @log
@@ -307,7 +313,7 @@ def admin_list_all_wishes(update: Update, ctx: CallbackContext):
         try:
             ctx.bot.forward_message(conf.arthur_id, wish["fulfiller_id"], wish["proof_msg_id"])
         except BadRequest as e:
-            logging.warning("Missing msg: ", e)
+            logger.warning("Missing msg: %s", e)
 
 
 def get_cancel_markup():
@@ -329,7 +335,9 @@ def admin_list_statistics(update: Update, ctx: CallbackContext):
 
     best_creators_msg = "Чьи желания были самыми выполняемыми:\n"
     for telegram_id, wish_count in top_creators.most_common(3):
-        assert telegram_id in ctx.dispatcher.user_data
+        if telegram_id not in ctx.dispatcher.user_data:
+            msg = f"User {telegram_id} not found in dispatcher user data"
+            raise RuntimeError(msg)
         contact = ctx.dispatcher.user_data[telegram_id]["contact"]
         best_creators_msg += f"{contact} — {wish_count}\n"
 
@@ -337,7 +345,9 @@ def admin_list_statistics(update: Update, ctx: CallbackContext):
 
     best_fulfillers_msg = "Кто больше всех выполнял:\n"
     for telegram_id, wish_count in top_fulfillers.most_common(3):
-        assert telegram_id in ctx.dispatcher.user_data
+        if telegram_id not in ctx.dispatcher.user_data:
+            msg = f"User {telegram_id} not found in dispatcher user data"
+            raise RuntimeError(msg)
         contact = ctx.dispatcher.user_data[telegram_id]["contact"]
         best_fulfillers_msg += f"{contact} — {wish_count}\n"
 
@@ -345,10 +355,10 @@ def admin_list_statistics(update: Update, ctx: CallbackContext):
 
 
 @log
-def button_handler(update: Update, ctx: CallbackContext):
+def button_handler(update: Update, ctx: CallbackContext):  # noqa: C901, PLR0911
     if "contact" not in ctx.user_data:
         start_handler(update, ctx)
-        return
+        return None
     text = update.message.text
     if text == constants.toplevel_buttons[constants.MAKE_WISH]:
         if ctx.user_data["wishes"]["created"]:
@@ -367,24 +377,30 @@ def button_handler(update: Update, ctx: CallbackContext):
 
         update.message.reply_text(constants.waiting_for_wish, reply_markup=get_cancel_markup())
         return constants.MAKE_WISH
-    elif text == constants.toplevel_buttons[constants.SELECT_WISH]:
+    if text == constants.toplevel_buttons[constants.SELECT_WISH]:
         select_wish(update, ctx)
         return ConversationHandler.END
-    elif text == constants.toplevel_buttons[constants.FULFILLED_LIST]:
+    if text == constants.toplevel_buttons[constants.FULFILLED_LIST]:
         list_fulfilled(update, ctx)
         return ConversationHandler.END
-    elif text == constants.toplevel_buttons[constants.WISHES_IN_PROGRESS]:
+    if text == constants.toplevel_buttons[constants.WISHES_IN_PROGRESS]:
         list_in_progress(update, ctx)
         return ConversationHandler.END
-    elif text == constants.toplevel_buttons[constants.MY_WISHES]:
+    if text == constants.toplevel_buttons[constants.MY_WISHES]:
         list_my_wishes(update, ctx)
         return ConversationHandler.END
-    elif text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]:
-        assert update.effective_user.id == ctx.bot_data.config.arthur_id
+    if text == constants.admin_buttons[constants.ARTHUR_ALL_WISHES]:
+        if update.effective_user.id != ctx.bot_data.config.arthur_id:
+            msg = "User is not authorized to view all wishes"
+            raise RuntimeError(msg)
         admin_list_all_wishes(update, ctx)
         return ConversationHandler.END
 
-    elif text == constants.admin_buttons[constants.ARTHUR_STATISTICS]:
-        assert update.effective_user.id == ctx.bot_data.config.arthur_id
+    if text == constants.admin_buttons[constants.ARTHUR_STATISTICS]:
+        if update.effective_user.id != ctx.bot_data.config.arthur_id:
+            msg = "User is not authorized to view statistics"
+            raise RuntimeError(msg)
         admin_list_statistics(update, ctx)
         return ConversationHandler.END
+
+    return None

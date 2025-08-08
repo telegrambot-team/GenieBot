@@ -1,26 +1,29 @@
 import logging
+
 from functools import wraps
 
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.bot import log
 from telegram.ext import CallbackContext
 
 from src.constants import (
-    start_msg,
-    request_contact_text,
+    ARTHUR_ALL_WISHES,
+    ARTHUR_STATISTICS,
+    FULFILLED_LIST,
+    MAKE_WISH,
+    MY_WISHES,
+    REMOVED,
+    SELECT_WISH,
+    WISHES_IN_PROGRESS,
+    admin_buttons,
     default_handler_text,
     intro_msg,
-    ARTHUR_ALL_WISHES,
-    admin_buttons,
+    request_contact_text,
+    start_msg,
     toplevel_buttons,
-    WISHES_IN_PROGRESS,
-    MY_WISHES,
-    FULFILLED_LIST,
-    SELECT_WISH,
-    MAKE_WISH,
-    REMOVED,
-    ARTHUR_STATISTICS,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def restricted(func, admin_ids: list[int]):
@@ -29,7 +32,7 @@ def restricted(func, admin_ids: list[int]):
         user_id = update.effective_user.id
         if user_id not in admin_ids:
             text = f"Unauthorized access denied for {user_id}"
-            logging.warning(text)
+            logger.warning(text)
             msg_admin(context.bot_data.config.admin_ids, context.bot, text)
             return
         func(update, context, *args, **kwargs)
@@ -87,7 +90,7 @@ def drop_wish(update: Update, ctx: CallbackContext):
         fulfiller_data = ctx.dispatcher.user_data.get(wish["fulfiller_id"])
         if wish_id in fulfiller_data["wishes"]["in_progress"]:
             fulfiller_data["wishes"]["in_progress"].remove(wish_id)
-            logging.info(fulfiller_data["wishes"]["in_progress"])
+            logger.info(fulfiller_data["wishes"]["in_progress"])
     wish["status"] = REMOVED
 
     del user_data["wishes"]["created"][wish_to_delete]
@@ -96,7 +99,7 @@ def drop_wish(update: Update, ctx: CallbackContext):
 
 def ups_handler(update, context):
     chat_id = update.effective_chat.id or ""
-    logging.exception(context.error)
+    logger.exception(context.error)
     msg_admin(
         context.bot_data.config.admin_ids,
         context.bot,
@@ -106,7 +109,7 @@ def ups_handler(update, context):
 
 @log
 def contact_handler(update: Update, ctx: CallbackContext):
-    logging.info(update)
+    logger.info(update)
     contact = update.message.contact
     phone = contact.phone_number
     if phone[0] != "+":

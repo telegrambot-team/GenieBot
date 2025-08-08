@@ -1,14 +1,15 @@
-import logging
 import asyncio
+import logging
 import sys
 
+from telegram.ext import Updater
 from telegram.ext.contexttypes import ContextTypes
 
-from src.handlers_setup import setup_handlers
-from telegram.ext import Updater
-
-from src.config import get_config, BotData
+from src.config import BotData, get_config
 from src.db_persistence import DBPersistence
+from src.handlers_setup import setup_handlers
+
+logger = logging.getLogger(__name__)
 
 # hack for tornado ioloop
 if sys.platform == "win32":
@@ -18,10 +19,10 @@ if sys.platform == "win32":
 def create_bot(conf):
     if conf.db_url:
         persistence = DBPersistence(conf.db_url)
-        logging.info("Persistence enabled")
+        logger.info("Persistence enabled")
     else:
         persistence = None
-        logging.warning("Persistence disabled")
+        logger.warning("Persistence disabled")
     context_types = ContextTypes(bot_data=BotData)
     updater = Updater(conf.bot_token, use_context=True, persistence=persistence, context_types=context_types)
     setup_handlers(updater, conf.admin_ids)
@@ -34,14 +35,14 @@ def main():
     logging.basicConfig(
         level=logging.INFO, format="%(filename)s: %(levelname)s: %(funcName)s(): %(lineno)d:\t%(message)s"
     )
-    logging.info("Application started")
+    logger.info("Application started")
     conf = get_config()
     updater = create_bot(conf)
     updater.start_polling()
     updater.idle()
     if updater.running:
         updater.stop()
-    logging.info("Application shut down")
+    logger.info("Application shut down")
 
 
 # TODO: logging every handler triggered by user
